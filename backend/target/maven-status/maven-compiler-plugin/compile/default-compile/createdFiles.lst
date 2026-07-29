@@ -1,0 +1,15 @@
+com\infosys\auth\service\AuthService.class
+com\infosys\auth\model\User.class
+com\infosys\auth\repository\UserRepository.class
+com\infosys\auth\security\JwtUtil.class
+com\infosys\auth\security\UserDetailsServiceImpl.class
+com\infosys\auth\config\SecurityConfig.class
+com\infosys\auth\dto\AuthResponse$Builder.class
+com\infosys\auth\security\JwtFilter.class
+com\infosys\auth\controller\AuthController.class
+com\infosys\auth\AuthBackendApplication.class
+com\infosys\auth\dto\AuthResponse.class
+com\infosys\auth\dto\RegisterRequest.class
+com\infosys\auth\model\User$Builder.class
+com\infosys\auth\dto\LoginRequest.class
+com\infosys\auth\model\User$Role.class
