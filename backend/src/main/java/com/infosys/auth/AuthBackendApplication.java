@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AuthBackendApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(AuthBackendApplication.class, args);
+        System.out.println("Server Listening!");
     }
 }
