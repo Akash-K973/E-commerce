@@ -284,6 +284,7 @@ export default function ProfileEdit() {
               onClick={() => navigate('/profile')} 
               disabled={submitting}
               style={{ 
+                width:"200px",
                 marginTop: '0', 
                 background: 'rgba(255, 255, 255, 0.05)', 
                 border: '1px solid var(--glass-border)', 
