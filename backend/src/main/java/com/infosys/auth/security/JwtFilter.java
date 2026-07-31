@@ -40,6 +40,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             if (jwt != null) {
                 String email = jwtUtil.extractUsername(jwt);
+                logger.info("Extracted email from JWT: {}", email);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -53,11 +54,16 @@ public class JwtFilter extends OncePerRequestFilter {
                                 );
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                        logger.info("Successfully authenticated user: {}", email);
+                    } else {
+                        logger.warn("JWT validation failed for user: {}", email);
                     }
                 }
+            } else {
+                logger.debug("No JWT token found in request headers for URL: {}", request.getRequestURI());
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e.getMessage());
+            logger.error("Cannot set user authentication: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);

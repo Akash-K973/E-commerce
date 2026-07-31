@@ -3,6 +3,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import Dashboard from './pages/Dashboard'
 import './App.css'
+import Profile from './pages/Profile'
+import ProfileEdit from './pages/ProfileEdit'
 
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('user')
@@ -16,6 +18,22 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute>
+              <ProfileEdit />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={

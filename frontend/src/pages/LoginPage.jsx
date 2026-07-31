@@ -56,7 +56,6 @@ export default function LoginPage() {
       <div className="auth-card">
         {/* Header */}
         <div className="auth-header">
-          <div className="auth-logo">🔐</div>
           <h1 className="auth-title">Welcome back</h1>
           <p className="auth-subtitle">Sign in to your account to continue</p>
         </div>
@@ -74,7 +73,6 @@ export default function LoginPage() {
           <div className="form-group">
             <label className="form-label" htmlFor="login-email">Email Address</label>
             <div className="input-wrapper">
-              <span className="input-icon">✉️</span>
               <input
                 id="login-email"
                 type="email"
@@ -93,7 +91,6 @@ export default function LoginPage() {
           <div className="form-group">
             <label className="form-label" htmlFor="login-password">Password</label>
             <div className="input-wrapper">
-              <span className="input-icon">🔒</span>
               <input
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}

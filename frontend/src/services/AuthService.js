@@ -15,6 +15,9 @@ api.interceptors.request.use(
     const user = JSON.parse(localStorage.getItem('user') || 'null')
     if (user?.token) {
       config.headers.Authorization = `Bearer ${user.token}`
+      console.log(`[Axios Interceptor] Attaching token to ${config.method.toUpperCase()} ${config.url}`);
+    } else {
+      console.warn(`[Axios Interceptor] No token found in localStorage for ${config.method.toUpperCase()} ${config.url}`);
     }
     return config
   },
@@ -41,6 +44,25 @@ const AuthService = {
 
   getCurrentUser() {
     return JSON.parse(localStorage.getItem('user') || 'null')
+  },
+
+  async getUserProfile() {
+    const response = await api.get('/users/profile')
+    return response.data
+  },
+
+  async updateUserProfile(profileData) {
+    const response = await api.put('/users/profile', profileData)
+    const user = this.getCurrentUser()
+    if (user) {
+      const updatedUser = {
+        ...user,
+        username: response.data.username,
+        email: response.data.email
+      }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    }
+    return response.data
   },
 
   isLoggedIn() {

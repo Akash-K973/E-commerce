@@ -1,70 +1,32 @@
-package com.infosys.auth.model;
+package com.infosys.auth.dto;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "email"),
-        @UniqueConstraint(columnNames = "username")
-    })
-public class User {
+public class ProfileResponse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String username;
-
-    @Column(nullable = false, unique = true)
     private String email;
-
-    @Column(nullable = false)
-    private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-
-    @Column(name = "created_at", updatable = false)
+    private String role;
+    private String fullName;
+    private String bio;
+    private String phoneNumber;
+    private String location;
     private LocalDateTime createdAt;
 
-    @Column(name = "full_name")
-    private String fullName;
-
-    @Column(length = 500)
-    private String bio;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
-    private String location;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public ProfileResponse() {
     }
 
-    public enum Role {
-        USER, ADMIN
-    }
-
-    public User() {
-    }
-
-    public User(Long id, String username, String email, String password, Role role, LocalDateTime createdAt, String fullName, String bio, String phoneNumber, String location) {
+    public ProfileResponse(Long id, String username, String email, String role, String fullName, String bio, String phoneNumber, String location, LocalDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.password = password;
         this.role = role;
-        this.createdAt = createdAt;
         this.fullName = fullName;
         this.bio = bio;
         this.phoneNumber = phoneNumber;
         this.location = location;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -91,28 +53,12 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public String getFullName() {
@@ -147,6 +93,14 @@ public class User {
         this.location = location;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     // Builder implementation
     public static Builder builder() {
         return new Builder();
@@ -156,13 +110,12 @@ public class User {
         private Long id;
         private String username;
         private String email;
-        private String password;
-        private Role role;
-        private LocalDateTime createdAt;
+        private String role;
         private String fullName;
         private String bio;
         private String phoneNumber;
         private String location;
+        private LocalDateTime createdAt;
 
         public Builder id(Long id) {
             this.id = id;
@@ -179,18 +132,8 @@ public class User {
             return this;
         }
 
-        public Builder password(String password) {
-            this.password = password;
-            return this;
-        }
-
-        public Builder role(Role role) {
+        public Builder role(String role) {
             this.role = role;
-            return this;
-        }
-
-        public Builder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
             return this;
         }
 
@@ -214,8 +157,13 @@ public class User {
             return this;
         }
 
-        public User build() {
-            return new User(id, username, email, password, role, createdAt, fullName, bio, phoneNumber, location);
+        public Builder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public ProfileResponse build() {
+            return new ProfileResponse(id, username, email, role, fullName, bio, phoneNumber, location, createdAt);
         }
     }
 }

@@ -10,6 +10,9 @@ export default function Dashboard() {
     navigate('/login')
   }
   
+  const handleProfile = () => {
+    navigate('/profile')
+  }
 
   // Fallback if user details are missing
   const username = user?.username || 'User'
@@ -22,12 +25,13 @@ export default function Dashboard() {
       {/* Navbar */}
       <nav className="dashboard-navbar">
         <div className="navbar-brand">
-          <div className="navbar-logo">🔐</div>
-          <span>SecurePortal</span>
+          <span>ShopNova</span>
         </div>
         <div className="navbar-right">
           <div className="navbar-username">
-            Welcome, <span>{username}</span>
+            Welcome, <button className="btn-logout" onClick={handleProfile}>
+            {username}
+          </button>
           </div>
           <button className="btn-logout" onClick={handleLogout}>
             Logout
