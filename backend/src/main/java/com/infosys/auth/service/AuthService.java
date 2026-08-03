@@ -42,12 +42,19 @@ public class AuthService {
             throw new RuntimeException("Error: Username is already taken!");
         }
 
+        User.Role targetRole = User.Role.CUSTOMER;
+        if (request.getRole() != null) {
+            try {
+                targetRole = User.Role.valueOf(request.getRole().toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         // Build and save new user
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(User.Role.USER)
+                .role(targetRole)
                 .build();
 
         userRepository.save(user);

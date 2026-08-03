@@ -44,6 +44,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth ->
                 auth
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/products/**").permitAll()
+                    .requestMatchers("/api/customer/**").permitAll()
+                    .requestMatchers("/api/vendor/**").permitAll()
+                    .requestMatchers("/api/admin/**").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

@@ -9,6 +9,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'CUSTOMER',
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
@@ -58,7 +59,7 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      await AuthService.register(formData.username, formData.email, formData.password)
+      await AuthService.register(formData.username, formData.email, formData.password, formData.role)
       setApiSuccess('Account created successfully! Redirecting to login...')
       setTimeout(() => navigate('/login'), 2000)
     } catch (error) {
@@ -126,6 +127,45 @@ export default function RegisterPage() {
               />
             </div>
             {errors.username && <span className="field-error">⚠ {errors.username}</span>}
+          </div>
+
+          {/* Account Type */}
+          <div className="form-group">
+            <label className="form-label">Account Type</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, role: 'CUSTOMER' }))}
+                style={{
+                  padding: '0.65rem',
+                  background: formData.role === 'CUSTOMER' ? 'var(--gold-dim)' : 'var(--bg-card)',
+                  border: '1px solid ' + (formData.role === 'CUSTOMER' ? 'var(--gold)' : 'var(--border)'),
+                  color: formData.role === 'CUSTOMER' ? 'var(--gold)' : 'var(--text-secondary)',
+                  borderRadius: 'var(--radius-btn)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                🛍️ Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, role: 'VENDOR' }))}
+                style={{
+                  padding: '0.65rem',
+                  background: formData.role === 'VENDOR' ? 'var(--gold-dim)' : 'var(--bg-card)',
+                  border: '1px solid ' + (formData.role === 'VENDOR' ? 'var(--gold)' : 'var(--border)'),
+                  color: formData.role === 'VENDOR' ? 'var(--gold)' : 'var(--text-secondary)',
+                  borderRadius: 'var(--radius-btn)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                🏪 Vendor Store
+              </button>
+            </div>
           </div>
 
           {/* Email */}

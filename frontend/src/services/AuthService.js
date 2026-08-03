@@ -25,8 +25,8 @@ api.interceptors.request.use(
 )
 
 const AuthService = {
-  async register(username, email, password) {
-    const response = await api.post('/auth/register', { username, email, password })
+  async register(username, email, password, role = 'CUSTOMER') {
+    const response = await api.post('/auth/register', { username, email, password, role })
     return response.data
   },
 
