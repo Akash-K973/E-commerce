@@ -69,6 +69,21 @@ const AuthService = {
     const user = this.getCurrentUser()
     return !!user?.token
   },
+
+  async forgotPassword(email) {
+    const response = await api.post('/auth/forgot-password', { email })
+    return response.data
+  },
+
+  async resetPassword(token, newPassword) {
+    const response = await api.post('/auth/reset-password', { token, newPassword })
+    return response.data
+  },
+
+  async verifyResetToken(token) {
+    const response = await api.get(`/auth/verify-reset-token?token=${token}`)
+    return response.data
+  },
 }
 
 export default AuthService

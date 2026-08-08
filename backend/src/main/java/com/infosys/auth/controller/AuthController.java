@@ -1,8 +1,10 @@
 package com.infosys.auth.controller;
 
 import com.infosys.auth.dto.AuthResponse;
+import com.infosys.auth.dto.ForgotPasswordRequest;
 import com.infosys.auth.dto.LoginRequest;
 import com.infosys.auth.dto.RegisterRequest;
+import com.infosys.auth.dto.ResetPasswordRequest;
 import com.infosys.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +43,34 @@ public class AuthController {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Invalid email or password"));
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            Map<String, String> response = authService.forgotPassword(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            Map<String, String> response = authService.resetPassword(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/verify-reset-token")
+    public ResponseEntity<?> verifyResetToken(@RequestParam String token) {
+        Map<String, Object> response = authService.verifyResetToken(token);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/health")

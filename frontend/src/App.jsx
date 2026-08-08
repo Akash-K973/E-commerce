@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard'
 import './App.css'
 import Profile from './pages/Profile'
 import ProfileEdit from './pages/ProfileEdit'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('user')
@@ -18,6 +20,8 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/profile"
           element={

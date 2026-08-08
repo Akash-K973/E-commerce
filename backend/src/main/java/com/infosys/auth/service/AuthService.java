@@ -1,9 +1,13 @@
 package com.infosys.auth.service;
 
 import com.infosys.auth.dto.AuthResponse;
+import com.infosys.auth.dto.ForgotPasswordRequest;
 import com.infosys.auth.dto.LoginRequest;
 import com.infosys.auth.dto.RegisterRequest;
+import com.infosys.auth.dto.ResetPasswordRequest;
+import com.infosys.auth.model.PasswordResetToken;
 import com.infosys.auth.model.User;
+import com.infosys.auth.repository.PasswordResetTokenRepository;
 import com.infosys.auth.repository.UserRepository;
 import com.infosys.auth.security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +16,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -20,15 +29,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager,
+                       PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -88,5 +100,63 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    @Transactional
+    public Map<String, String> forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("No account found with this email address."));
+
+        // Delete any existing tokens for this user
+        passwordResetTokenRepository.deleteByUser(user);
+        passwordResetTokenRepository.flush();
+
+        // Generate a secure random token valid for 15 minutes
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(15);
+
+        PasswordResetToken resetToken = new PasswordResetToken(token, user, expiryDate);
+        passwordResetTokenRepository.save(resetToken);
+
+        // Return token in response for local/dev testing (no SMTP required)
+        return Map.of(
+                "message", "Password reset link generated successfully. Use the token below to reset your password.",
+                "resetToken", token
+        );
+    }
+
+    @Transactional
+    public Map<String, String> resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token."));
+
+        if (resetToken.isUsed()) {
+            throw new RuntimeException("This reset token has already been used.");
+        }
+
+        if (resetToken.isExpired()) {
+            throw new RuntimeException("Reset token has expired. Please request a new one.");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Mark token as used
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        return Map.of("message", "Password has been reset successfully. You can now log in with your new password.");
+    }
+
+    public Map<String, Object> verifyResetToken(String token) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null || resetToken.isUsed() || resetToken.isExpired()) {
+            return Map.of("valid", false, "message", "Invalid or expired reset token.");
+        }
+
+        return Map.of("valid", true, "message", "Token is valid.");
     }
 }
