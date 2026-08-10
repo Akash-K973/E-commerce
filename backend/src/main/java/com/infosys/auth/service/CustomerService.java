@@ -75,14 +75,15 @@ public class CustomerService {
 
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
-            BigDecimal itemTotal = product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            BigDecimal discountedPrice = product.getDiscountedPrice();
+            BigDecimal itemTotal = discountedPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
             total = total.add(itemTotal);
 
             OrderItem orderItem = new OrderItem(
                     product.getId(),
                     product.getName(),
                     product.getImageUrl(),
-                    product.getPrice(),
+                    discountedPrice,
                     cartItem.getQuantity(),
                     product.getVendorId()
             );

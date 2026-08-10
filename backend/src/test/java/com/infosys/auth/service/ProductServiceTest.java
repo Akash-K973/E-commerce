@@ -31,24 +31,24 @@ class ProductServiceTest {
         Product p = new Product();
         p.setName("Laptop");
 
-        when(productRepository.searchProducts("laptop", "Electronics")).thenReturn(List.of(p));
+        when(productRepository.searchProducts("laptop", "Electronics", null)).thenReturn(List.of(p));
 
-        List<Product> result = productService.getAllProducts("laptop", "Electronics");
+        List<Product> result = productService.getAllProducts("laptop", "Electronics", null);
 
         assertEquals(1, result.size());
         assertEquals("Laptop", result.get(0).getName());
-        verify(productRepository).searchProducts("laptop", "Electronics");
+        verify(productRepository).searchProducts("laptop", "Electronics", null);
     }
 
     @Test
     void getAllProducts_withNullCategoryAndALLCategory_normalizesNulls() {
         Product p = new Product();
-        when(productRepository.searchProducts("laptop", null)).thenReturn(List.of(p));
+        when(productRepository.searchProducts("laptop", null, null)).thenReturn(List.of(p));
 
-        List<Product> result = productService.getAllProducts("laptop", "ALL");
+        List<Product> result = productService.getAllProducts("laptop", "ALL", null);
 
         assertEquals(1, result.size());
-        verify(productRepository).searchProducts("laptop", null);
+        verify(productRepository).searchProducts("laptop", null, null);
     }
 
     @Test
@@ -56,10 +56,10 @@ class ProductServiceTest {
         Product p = new Product();
         when(productRepository.findAll()).thenReturn(List.of(p));
 
-        List<Product> result = productService.getAllProducts(null, "");
+        List<Product> result = productService.getAllProducts(null, "", null);
 
         assertEquals(1, result.size());
         verify(productRepository).findAll();
-        verify(productRepository, never()).searchProducts(any(), any());
+        verify(productRepository, never()).searchProducts(any(), any(), any());
     }
 }

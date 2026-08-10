@@ -13,8 +13,11 @@ D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\service\
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\config\DataInitializer.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\controller\CustomerController.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\repository\UserRepository.java
+D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\model\PasswordResetToken.java
+D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\ResetPasswordRequest.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\security\JwtUtil.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\repository\ProductRepository.java
+D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\repository\PasswordResetTokenRepository.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\service\VendorService.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\AuthResponse.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\ProfileResponse.java
@@ -25,6 +28,7 @@ D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\model\Or
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\LoginRequest.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\model\CartItem.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\ProfileRequest.java
+D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\ForgotPasswordRequest.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\service\UserService.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\controller\AdminController.java
 D:\Project\Spring\InfoSys Spring\backend\src\main\java\com\infosys\auth\dto\RegisterRequest.java

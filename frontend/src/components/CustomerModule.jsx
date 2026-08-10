@@ -89,7 +89,8 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated 
 
   const calculateSubtotal = () => {
     return cartItems.reduce((acc, item) => {
-      const price = item.product?.price || 0
+      const product = item.product
+      const price = (product?.discount > 0 ? product.discountedPrice : product?.price) || 0
       return acc + (Number(price) * item.quantity)
     }, 0)
   }
@@ -164,9 +165,20 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated 
                     />
                     <div style={{ flexGrow: 1 }}>
                       <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#fff' }}>{item.product?.name}</div>
-                      <div style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                        ${Number(item.product?.price || 0).toLocaleString()}
-                      </div>
+                      {item.product?.discount > 0 ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.2rem' }}>
+                          <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '0.9rem' }}>
+                            ${Number(item.product?.discountedPrice || 0).toLocaleString()}
+                          </span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textDecoration: 'line-through' }}>
+                            ${Number(item.product?.price || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      ) : (
+                        <div style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+                          ${Number(item.product?.price || 0).toLocaleString()}
+                        </div>
+                      )}
 
                       {/* Quantity Controls */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>

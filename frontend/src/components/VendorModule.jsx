@@ -22,7 +22,8 @@ export default function VendorModule() {
     category: 'Watches',
     stockQuantity: 10,
     imageUrl: '',
-    sku: ''
+    sku: '',
+    discount: 0
   })
 
   // Vendor Profile Edit State
@@ -75,7 +76,8 @@ export default function VendorModule() {
       category: 'Watches',
       stockQuantity: 15,
       imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
-      sku: 'VND-' + Math.floor(100 + Math.random() * 900)
+      sku: 'VND-' + Math.floor(100 + Math.random() * 900),
+      discount: 0
     })
     setShowProductModal(true)
   }
@@ -89,7 +91,8 @@ export default function VendorModule() {
       category: prod.category || 'Watches',
       stockQuantity: prod.stockQuantity || 0,
       imageUrl: prod.imageUrl || '',
-      sku: prod.sku || ''
+      sku: prod.sku || '',
+      discount: prod.discount || 0
     })
     setShowProductModal(true)
   }
@@ -101,8 +104,10 @@ export default function VendorModule() {
         ...productForm,
         price: Number(productForm.price),
         stockQuantity: Number(productForm.stockQuantity),
+        discount: Number(productForm.discount || 0),
         vendorId: vendorId,
-        vendorName: profile?.storeName || user?.username || 'Vendor'
+        vendorName: profile?.storeName || user?.username || 'Vendor',
+        approved: editingProduct ? editingProduct.approved : false
       }
 
       if (editingProduct) {
@@ -264,6 +269,7 @@ export default function VendorModule() {
               <th style={{ padding: '1rem' }}>SKU</th>
               <th style={{ padding: '1rem' }}>Category</th>
               <th style={{ padding: '1rem' }}>Price</th>
+              <th style={{ padding: '1rem' }}>Status</th>
               <th style={{ padding: '1rem' }}>Stock</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
             </tr>
@@ -289,7 +295,29 @@ export default function VendorModule() {
                   </td>
                   <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{prod.sku || 'N/A'}</td>
                   <td style={{ padding: '1rem' }}><span className="badge badge-purple">{prod.category}</span></td>
-                  <td style={{ padding: '1rem', fontWeight: '800', color: 'var(--gold)' }}>${Number(prod.price).toLocaleString()}</td>
+                  <td style={{ padding: '1rem' }}>
+                    {prod.discount > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ color: 'var(--gold)', fontWeight: '800' }}>
+                          ${Number(prod.discountedPrice).toLocaleString()}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textDecoration: 'line-through' }}>
+                          ${Number(prod.price).toLocaleString()} ({prod.discount}% off)
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ fontWeight: '800', color: 'var(--gold)' }}>
+                        ${Number(prod.price).toLocaleString()}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    {prod.approved ? (
+                      <span className="badge badge-green">Live / Approved</span>
+                    ) : (
+                      <span className="badge badge-orange">Pending Approval</span>
+                    )}
+                  </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ color: prod.stockQuantity < 10 ? '#ef4444' : '#10b981', fontWeight: '700' }}>
                       {prod.stockQuantity} units
@@ -368,7 +396,7 @@ export default function VendorModule() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Price ($)</label>
                   <input
@@ -377,6 +405,18 @@ export default function VendorModule() {
                     required
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Discount (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={productForm.discount}
+                    onChange={(e) => setProductForm({ ...productForm, discount: e.target.value })}
                     style={inputStyle}
                   />
                 </div>

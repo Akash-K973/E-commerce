@@ -17,7 +17,7 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      const data = await ProductService.getAllProducts(search, selectedCategory)
+      const data = await ProductService.getAllProducts(search, selectedCategory, true)
       setProducts(data)
       setError('')
     } catch (err) {
@@ -158,6 +158,25 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
                   alt={product.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'var(--transition-slow)' }}
                 />
+                {product.discount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      background: 'rgba(239,68,68,0.9)',
+                      color: '#fff',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '800',
+                      backdropFilter: 'blur(8px)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    {product.discount}% OFF
+                  </span>
+                )}
                 <span
                   style={{
                     position: 'absolute',
@@ -209,9 +228,20 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <div>
-                    <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--gold)' }}>
-                      ${product.price ? Number(product.price).toLocaleString() : '0.00'}
-                    </span>
+                    {product.discount > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                          ${Number(product.price).toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--gold)' }}>
+                          ${Number(product.discountedPrice).toLocaleString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--gold)' }}>
+                        ${product.price ? Number(product.price).toLocaleString() : '0.00'}
+                      </span>
+                    )}
                   </div>
 
                   <button
@@ -289,8 +319,24 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
               <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.75rem', marginBottom: '0.5rem' }}>
                 {selectedProduct.name}
               </h2>
-              <div style={{ color: 'var(--gold)', fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>
-                ${Number(selectedProduct.price).toLocaleString()}
+              <div style={{ marginBottom: '1rem' }}>
+                {selectedProduct.discount > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--gold)', fontSize: '1.5rem', fontWeight: '800' }}>
+                      ${Number(selectedProduct.discountedPrice).toLocaleString()}
+                    </span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '1.1rem', textDecoration: 'line-through' }}>
+                      ${Number(selectedProduct.price).toLocaleString()}
+                    </span>
+                    <span style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', padding: '2px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                      {selectedProduct.discount}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--gold)', fontSize: '1.5rem', fontWeight: '800' }}>
+                    ${Number(selectedProduct.price).toLocaleString()}
+                  </div>
+                )}
               </div>
 
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>

@@ -15,13 +15,14 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public List<Product> getAllProducts(String query, String category) {
-        if ((query != null && !query.trim().isEmpty()) || (category != null && !category.trim().isEmpty())) {
-            String q = (query != null && !query.trim().isEmpty()) ? query.trim() : null;
-            String cat = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) ? category.trim() : null;
-            return productRepository.searchProducts(q, cat);
+    public List<Product> getAllProducts(String query, String category, Boolean approved) {
+        String q = (query != null && !query.trim().isEmpty()) ? query.trim() : null;
+        String cat = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) ? category.trim() : null;
+        
+        if (q == null && cat == null && approved == null) {
+            return productRepository.findAll();
         }
-        return productRepository.findAll();
+        return productRepository.searchProducts(q, cat, approved);
     }
 
     public Product getProductById(Long id) {
@@ -46,6 +47,8 @@ public class ProductService {
         if (details.getStockQuantity() != null) product.setStockQuantity(details.getStockQuantity());
         if (details.getImageUrl() != null) product.setImageUrl(details.getImageUrl());
         if (details.getSku() != null) product.setSku(details.getSku());
+        if (details.getDiscount() != null) product.setDiscount(details.getDiscount());
+        if (details.getApproved() != null) product.setApproved(details.getApproved());
         return productRepository.save(product);
     }
 

@@ -111,7 +111,9 @@ public class DataInitializer implements CommandLineRunner {
                     "OBS-W-01",
                     4.9,
                     vId,
-                    "Aura Fine Atelier"
+                    "Aura Fine Atelier",
+                    new BigDecimal("10.00"),
+                    true
             ));
 
             productRepository.save(new Product(
@@ -125,7 +127,9 @@ public class DataInitializer implements CommandLineRunner {
                     "AUR-H-02",
                     4.8,
                     vId,
-                    "Aura Fine Atelier"
+                    "Aura Fine Atelier",
+                    BigDecimal.ZERO,
+                    true
             ));
 
             productRepository.save(new Product(
@@ -139,7 +143,9 @@ public class DataInitializer implements CommandLineRunner {
                     "ONY-B-03",
                     5.0,
                     vId,
-                    "Aura Fine Atelier"
+                    "Aura Fine Atelier",
+                    BigDecimal.ZERO,
+                    true
             ));
 
             productRepository.save(new Product(
@@ -153,7 +159,9 @@ public class DataInitializer implements CommandLineRunner {
                     "SOL-R-04",
                     4.7,
                     vId,
-                    "Aura Fine Atelier"
+                    "Aura Fine Atelier",
+                    new BigDecimal("15.00"),
+                    true
             ));
 
             productRepository.save(new Product(
@@ -167,7 +175,9 @@ public class DataInitializer implements CommandLineRunner {
                     "VEL-P-05",
                     4.9,
                     vId,
-                    "Aura Fine Atelier"
+                    "Aura Fine Atelier",
+                    BigDecimal.ZERO,
+                    true
             ));
         }
     }

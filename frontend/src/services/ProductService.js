@@ -8,10 +8,11 @@ const getHeaders = () => {
 }
 
 const ProductService = {
-  async getAllProducts(search = '', category = '') {
+  async getAllProducts(search = '', category = '', approved = undefined) {
     const params = {}
     if (search) params.search = search
     if (category && category !== 'ALL') params.category = category
+    if (approved !== undefined) params.approved = approved
     const response = await axios.get(API_URL, { params, headers: getHeaders() })
     return response.data
   },

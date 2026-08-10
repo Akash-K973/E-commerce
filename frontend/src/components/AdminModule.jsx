@@ -73,6 +73,16 @@ export default function AdminModule() {
     }
   }
 
+  const handleToggleProductApproval = async (product, approved) => {
+    try {
+      await ProductService.updateProduct(product.id, { ...product, approved })
+      loadAdminData()
+    } catch (err) {
+      console.error('Error updating product approval:', err)
+      alert('Failed to update product approval status.')
+    }
+  }
+
   if (loading) return <div style={{ color: 'var(--gold)', padding: '2rem' }}>Loading Admin Command Center...</div>
 
   return (
@@ -280,6 +290,7 @@ export default function AdminModule() {
                 <th style={{ padding: '1rem' }}>Item</th>
                 <th style={{ padding: '1rem' }}>Vendor</th>
                 <th style={{ padding: '1rem' }}>Price</th>
+                <th style={{ padding: '1rem' }}>Status</th>
                 <th style={{ padding: '1rem' }}>Stock</th>
                 <th style={{ padding: '1rem', textAlign: 'right' }}>Action</th>
               </tr>
@@ -297,15 +308,54 @@ export default function AdminModule() {
                     </div>
                   </td>
                   <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{prod.vendorName || 'Obsidian Seller'}</td>
-                  <td style={{ padding: '1rem', fontWeight: '800', color: 'var(--gold)' }}>${Number(prod.price).toLocaleString()}</td>
+                  <td style={{ padding: '1rem' }}>
+                    {prod.discount > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ color: 'var(--gold)', fontWeight: '800' }}>
+                          ${Number(prod.discountedPrice).toLocaleString()}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textDecoration: 'line-through' }}>
+                          ${Number(prod.price).toLocaleString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ fontWeight: '800', color: 'var(--gold)' }}>
+                        ${Number(prod.price).toLocaleString()}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    {prod.approved ? (
+                      <span className="badge badge-green">Approved</span>
+                    ) : (
+                      <span className="badge badge-orange">Pending</span>
+                    )}
+                  </td>
                   <td style={{ padding: '1rem' }}>{prod.stockQuantity} units</td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}>
-                    <button
-                      onClick={() => handleDeleteProduct(prod.id)}
-                      style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid var(--error)', color: '#fca5a5', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer' }}
-                    >
-                      Delete Product
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      {prod.approved ? (
+                        <button
+                          onClick={() => handleToggleProductApproval(prod, false)}
+                          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid var(--warning)', color: '#fde047', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                          Revoke
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleProductApproval(prod, true)}
+                          style={{ background: 'rgba(22,163,74,0.15)', border: '1px solid var(--success)', color: '#86efac', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                          Approve
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteProduct(prod.id)}
+                        style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid var(--error)', color: '#fca5a5', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

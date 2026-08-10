@@ -33,6 +33,12 @@ public class Product {
 
     private Double rating = 4.8;
 
+    @Column(name = "discount", precision = 5, scale = 2)
+    private BigDecimal discount = BigDecimal.ZERO;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean approved = false;
+
     @Column(name = "vendor_id")
     private Long vendorId;
 
@@ -49,7 +55,7 @@ public class Product {
 
     public Product() {}
 
-    public Product(Long id, String name, String description, BigDecimal price, String category, Integer stockQuantity, String imageUrl, String sku, Double rating, Long vendorId, String vendorName) {
+    public Product(Long id, String name, String description, BigDecimal price, String category, Integer stockQuantity, String imageUrl, String sku, Double rating, Long vendorId, String vendorName, BigDecimal discount, Boolean approved) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -61,6 +67,8 @@ public class Product {
         this.rating = rating;
         this.vendorId = vendorId;
         this.vendorName = vendorName;
+        this.discount = discount != null ? discount : BigDecimal.ZERO;
+        this.approved = approved != null ? approved : false;
     }
 
     public Long getId() { return id; }
@@ -98,4 +106,18 @@ public class Product {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public BigDecimal getDiscount() { return discount; }
+    public void setDiscount(BigDecimal discount) { this.discount = discount; }
+
+    public Boolean getApproved() { return approved; }
+    public void setApproved(Boolean approved) { this.approved = approved; }
+
+    public BigDecimal getDiscountedPrice() {
+        if (discount == null || discount.compareTo(BigDecimal.ZERO) <= 0) {
+            return price;
+        }
+        BigDecimal discountFactor = BigDecimal.ONE.subtract(discount.divide(BigDecimal.valueOf(100)));
+        return price.multiply(discountFactor).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
 }
