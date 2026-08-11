@@ -37,13 +37,26 @@ public class CustomerService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        if (product.getStockQuantity() == null || product.getStockQuantity() <= 0) {
+            throw new RuntimeException("Product '" + product.getName() + "' is out of stock");
+        }
+
+        int requestedQty = quantity != null ? quantity : 1;
+
         Optional<CartItem> existing = cartItemRepository.findByUserIdAndProductId(userId, productId);
         if (existing.isPresent()) {
             CartItem item = existing.get();
-            item.setQuantity(item.getQuantity() + (quantity != null ? quantity : 1));
+            int newTotal = item.getQuantity() + requestedQty;
+            if (newTotal > product.getStockQuantity()) {
+                throw new RuntimeException("Cannot add more than available stock (" + product.getStockQuantity() + " units) for '" + product.getName() + "'");
+            }
+            item.setQuantity(newTotal);
             return cartItemRepository.save(item);
         } else {
-            CartItem newItem = new CartItem(userId, product, quantity != null ? quantity : 1);
+            if (requestedQty > product.getStockQuantity()) {
+                throw new RuntimeException("Requested quantity exceeds available stock (" + product.getStockQuantity() + " units) for '" + product.getName() + "'");
+            }
+            CartItem newItem = new CartItem(userId, product, requestedQty);
             return cartItemRepository.save(newItem);
         }
     }
@@ -89,11 +102,14 @@ public class CustomerService {
             );
             order.getItems().add(orderItem);
 
-            // Deduct stock quantity
-            if (product.getStockQuantity() >= cartItem.getQuantity()) {
-                product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
-                productRepository.save(product);
+            // Deduct stock quantity – abort checkout if stock is insufficient
+            if (product.getStockQuantity() == null || product.getStockQuantity() < cartItem.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for '" + product.getName() + "'. Available: "
+                        + (product.getStockQuantity() != null ? product.getStockQuantity() : 0)
+                        + ", requested: " + cartItem.getQuantity());
             }
+            product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
+            productRepository.save(product);
         }
 
         order.setTotalAmount(total);

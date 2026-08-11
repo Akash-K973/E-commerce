@@ -38,13 +38,17 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
       alert('Please log in to add items to your cart.')
       return
     }
+    if (!product.stockQuantity || product.stockQuantity <= 0) {
+      alert('This product is out of stock.')
+      return
+    }
     setAddingId(product.id)
     try {
       await CustomerService.addToCart(user.id, product.id, 1)
       if (onAddToCartSuccess) onAddToCartSuccess()
     } catch (err) {
       console.error('Add to cart error:', err)
-      alert('Could not add item to cart.')
+      alert(err.response?.data?.message || err.message || 'Could not add item to cart.')
     } finally {
       setAddingId(null)
     }
@@ -246,20 +250,20 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
 
                   <button
                     onClick={() => handleAddToCart(product)}
-                    disabled={addingId === product.id}
+                    disabled={addingId === product.id || !product.stockQuantity || product.stockQuantity <= 0}
                     style={{
-                      background: 'var(--gold)',
-                      color: '#000',
-                      border: 'none',
+                      background: (!product.stockQuantity || product.stockQuantity <= 0) ? 'var(--bg-card)' : 'var(--gold)',
+                      color: (!product.stockQuantity || product.stockQuantity <= 0) ? 'var(--text-muted)' : '#000',
+                      border: (!product.stockQuantity || product.stockQuantity <= 0) ? '1px solid var(--border)' : 'none',
                       padding: '0.5rem 1rem',
                       borderRadius: 'var(--radius-btn)',
                       fontWeight: '700',
-                      cursor: 'pointer',
+                      cursor: (!product.stockQuantity || product.stockQuantity <= 0) ? 'not-allowed' : 'pointer',
                       fontSize: '0.85rem',
                       transition: 'var(--transition)'
                     }}
                   >
-                    {addingId === product.id ? 'Adding...' : '+ Add'}
+                    {addingId === product.id ? 'Adding...' : (!product.stockQuantity || product.stockQuantity <= 0) ? 'Out of Stock' : '+ Add'}
                   </button>
                 </div>
               </div>
@@ -354,20 +358,21 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
                   handleAddToCart(selectedProduct)
                   setSelectedProduct(null)
                 }}
+                disabled={!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0}
                 style={{
                   marginTop: 'auto',
                   width: '100%',
                   padding: '0.85rem',
-                  background: 'var(--gold)',
-                  color: '#000',
-                  border: 'none',
+                  background: (!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0) ? 'var(--bg-card)' : 'var(--gold)',
+                  color: (!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0) ? 'var(--text-muted)' : '#000',
+                  border: (!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0) ? '1px solid var(--border)' : 'none',
                   borderRadius: 'var(--radius-btn)',
                   fontWeight: '800',
                   fontSize: '1rem',
-                  cursor: 'pointer'
+                  cursor: (!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
                 }}
               >
-                🛒 Add to Cart
+                {(!selectedProduct.stockQuantity || selectedProduct.stockQuantity <= 0) ? '❌ Out of Stock' : '🛒 Add to Cart'}
               </button>
             </div>
           </div>

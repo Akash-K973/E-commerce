@@ -189,8 +189,16 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated 
                         <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>{item.quantity}</span>
                         <button
                           onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                          style={qtyBtnStyle}
+                          disabled={item.quantity >= (item.product?.stockQuantity || 0)}
+                          style={{
+                            ...qtyBtnStyle,
+                            opacity: item.quantity >= (item.product?.stockQuantity || 0) ? 0.4 : 1,
+                            cursor: item.quantity >= (item.product?.stockQuantity || 0) ? 'not-allowed' : 'pointer'
+                          }}
                         >+</button>
+                        {item.quantity >= (item.product?.stockQuantity || 0) && (
+                          <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: '600' }}>Max stock</span>
+                        )}
                       </div>
                     </div>
 
