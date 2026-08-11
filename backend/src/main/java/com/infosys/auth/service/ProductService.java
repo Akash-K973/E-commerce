@@ -56,6 +56,8 @@ public class ProductService {
 
     public Product updateProduct(Long id, Product details) {
         Product product = getProductById(id);
+        Boolean previousApproved = product.getApproved();
+
         if (details.getName() != null) product.setName(details.getName());
         if (details.getDescription() != null) product.setDescription(details.getDescription());
         if (details.getPrice() != null) product.setPrice(details.getPrice());
@@ -65,7 +67,17 @@ public class ProductService {
         if (details.getSku() != null) product.setSku(details.getSku());
         if (details.getDiscount() != null) product.setDiscount(details.getDiscount());
         if (details.getApproved() != null) product.setApproved(details.getApproved());
-        return productRepository.save(product);
+        
+        Product saved = productRepository.save(product);
+
+        // Notify vendor if admin changes product approval status
+        if (details.getApproved() != null && !details.getApproved().equals(previousApproved) && saved.getVendorId() != null) {
+            String statusLabel = saved.getApproved() ? "approved ✅" : "pending / revoked ❌";
+            String msg = "Your product \"" + saved.getName() + "\" has been " + statusLabel + " by admin.";
+            notificationService.createNotification(saved.getVendorId(), "PRODUCT_STATUS_CHANGED", msg);
+        }
+
+        return saved;
     }
 
     public void deleteProduct(Long id) {

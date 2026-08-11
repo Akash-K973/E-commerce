@@ -803,6 +803,19 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(22, 163, 74, 0.2);
 }
 
+.badge-black{
+  background: rgb(42, 38, 38);
+  color: black;
+  border: 1px solid black;
+}
+
+.badge-red{
+  background: rgba(163, 74, 22, 0.1);
+  color: red;
+  border: 1px solid red;
+}
+
+
 /* ============================================================
    PASSWORD STRENGTH METER
    ============================================================ */

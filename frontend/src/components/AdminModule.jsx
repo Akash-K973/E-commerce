@@ -58,7 +58,9 @@ export default function AdminModule() {
   useEffect(() => {
     loadAdminData()
     loadNotifications()
-  }, [])
+    const interval = setInterval(loadNotifications, 5000)
+    return () => clearInterval(interval)
+  }, [adminId])
 
   // Close panel when clicking outside
   useEffect(() => {
@@ -387,7 +389,8 @@ export default function AdminModule() {
                   </td>
                   <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{u.email}</td>
                   <td style={{ padding: '1rem' }}>
-                    <span className={u.role === 'ADMIN' ? 'badge badge-red' : u.role === 'VENDOR' ? 'badge badge-gold' : 'badge badge-purple'}>
+                    
+                    <span className={u.username == 'Akash_973'? 'badge badge-black' : u.role === 'ADMIN' ? 'badge badge-red' : u.role === 'VENDOR' ? 'badge badge-green' : 'badge badge-purple'}>
                       {u.role}
                     </span>
                   </td>

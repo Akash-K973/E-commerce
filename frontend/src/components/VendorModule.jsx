@@ -86,6 +86,8 @@ export default function VendorModule() {
   useEffect(() => {
     loadVendorData()
     loadNotifications()
+    const interval = setInterval(loadNotifications, 5000)
+    return () => clearInterval(interval)
   }, [vendorId])
 
   // Close panel when clicking outside

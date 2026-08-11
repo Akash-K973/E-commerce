@@ -48,6 +48,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/customer/**").permitAll()
                     .requestMatchers("/api/vendor/**").permitAll()
                     .requestMatchers("/api/admin/**").permitAll()
+                    .requestMatchers("/api/notifications/**").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
