@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import VendorService from '../services/VendorService'
 import ProductService from '../services/ProductService'
 import AuthService from '../services/AuthService'
+import NotificationService from '../services/NotificationService'
 
 export default function VendorModule() {
   const user = AuthService.getCurrentUser()
@@ -11,6 +12,12 @@ export default function VendorModule() {
   const [stats, setStats] = useState(null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+
+  // Notification state
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showNotifPanel, setShowNotifPanel] = useState(false)
+  const notifRef = useRef(null)
 
   // Product Form Modal State
   const [showProductModal, setShowProductModal] = useState(false)
@@ -63,9 +70,34 @@ export default function VendorModule() {
     }
   }
 
+  const loadNotifications = async () => {
+    try {
+      const [notifs, count] = await Promise.all([
+        NotificationService.getNotifications(vendorId),
+        NotificationService.getUnreadCount(vendorId)
+      ])
+      setNotifications(notifs)
+      setUnreadCount(count)
+    } catch (err) {
+      console.error('Error loading vendor notifications:', err)
+    }
+  }
+
   useEffect(() => {
     loadVendorData()
+    loadNotifications()
   }, [vendorId])
+
+  // Close panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifPanel(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleOpenAddModal = () => {
     setEditingProduct(null)
@@ -145,6 +177,24 @@ export default function VendorModule() {
     }
   }
 
+  const handleMarkAsRead = async (notifId) => {
+    try {
+      await NotificationService.markAsRead(notifId)
+      loadNotifications()
+    } catch (err) {
+      console.error('Error marking notification as read:', err)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    try {
+      await NotificationService.markAllAsRead(vendorId)
+      loadNotifications()
+    } catch (err) {
+      console.error('Error marking all as read:', err)
+    }
+  }
+
   if (loading) return <div style={{ color: 'var(--gold)', padding: '2rem' }}>Loading Vendor Atelier Portal...</div>
 
   return (
@@ -181,20 +231,159 @@ export default function VendorModule() {
           </div>
         </div>
 
-        <button
-          onClick={() => setShowProfileModal(true)}
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-focus)',
-            color: 'var(--gold)',
-            padding: '0.65rem 1.25rem',
-            borderRadius: 'var(--radius-btn)',
-            cursor: 'pointer',
-            fontWeight: '700'
-          }}
-        >
-          ⚙️ Edit Store Profile
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Notification Bell */}
+          <div ref={notifRef} style={{ position: 'relative' }}>
+            <button
+              id="vendor-notif-bell"
+              onClick={() => setShowNotifPanel(p => !p)}
+              style={{
+                position: 'relative',
+                background: unreadCount > 0 ? 'rgba(212,175,55,0.15)' : 'var(--bg-card)',
+                border: `1px solid ${unreadCount > 0 ? 'var(--gold)' : 'var(--border)'}`,
+                borderRadius: '12px',
+                padding: '0.65rem 1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: '#fff',
+                fontSize: '1.1rem',
+                transition: 'all 0.2s',
+                minWidth: '60px',
+                justifyContent: 'center'
+              }}
+            >
+              🔔
+              {unreadCount > 0 && (
+                <span style={{
+                  background: 'var(--gold)',
+                  color: '#000',
+                  borderRadius: '999px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  padding: '0.15rem 0.45rem',
+                  minWidth: '20px',
+                  textAlign: 'center',
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifPanel && (
+              <div
+                id="vendor-notif-panel"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 0.75rem)',
+                  right: 0,
+                  width: '360px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-focus)',
+                  borderRadius: 'var(--radius-card)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                  zIndex: 2000,
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Panel Header */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '1rem 1.25rem',
+                  borderBottom: '1px solid var(--border)'
+                }}>
+                  <span style={{ fontWeight: '800', color: '#fff', fontSize: '0.95rem' }}>🔔 Notifications</span>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        fontWeight: '700',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Notification List */}
+                <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      No notifications yet
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => !n.read && handleMarkAsRead(n.id)}
+                        style={{
+                          padding: '0.9rem 1.25rem',
+                          borderBottom: '1px solid var(--border-subtle)',
+                          background: n.read ? 'transparent' : 'rgba(212,175,55,0.06)',
+                          cursor: n.read ? 'default' : 'pointer',
+                          transition: 'background 0.15s',
+                          display: 'flex',
+                          gap: '0.75rem',
+                          alignItems: 'flex-start'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.1rem', flexShrink: 0, marginTop: '0.1rem' }}>
+                          {n.type === 'VENDOR_STATUS_CHANGED' ? '🏪' : '📦'}
+                        </span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: n.read ? 'var(--text-secondary)' : '#fff',
+                            fontWeight: n.read ? '400' : '600',
+                            lineHeight: '1.4'
+                          }}>
+                            {n.message}
+                          </p>
+                          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(n.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        {!n.read && (
+                          <span style={{
+                            width: '8px', height: '8px', borderRadius: '50%',
+                            background: 'var(--gold)', flexShrink: 0, marginTop: '0.35rem'
+                          }} />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setShowProfileModal(true)}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-focus)',
+              color: 'var(--gold)',
+              padding: '0.65rem 1.25rem',
+              borderRadius: 'var(--radius-btn)',
+              cursor: 'pointer',
+              fontWeight: '700'
+            }}
+          >
+            ⚙️ Edit Store Profile
+          </button>
+        </div>
       </div>
 
       {/* Analytics Summary Cards */}

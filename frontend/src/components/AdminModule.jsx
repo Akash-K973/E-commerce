@@ -1,14 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AdminService from '../services/AdminService'
 import ProductService from '../services/ProductService'
+import NotificationService from '../services/NotificationService'
+import AuthService from '../services/AuthService'
 
 export default function AdminModule() {
+  const adminUser = AuthService.getCurrentUser()
+  const adminId = adminUser?.id
+
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [vendors, setVendors] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeAdminTab, setActiveAdminTab] = useState('users') // 'users' | 'vendors' | 'products'
+
+  // Notification state
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showNotifPanel, setShowNotifPanel] = useState(false)
+  const notifRef = useRef(null)
 
   const loadAdminData = async () => {
     setLoading(true)
@@ -30,8 +41,34 @@ export default function AdminModule() {
     }
   }
 
+  const loadNotifications = async () => {
+    if (!adminId) return
+    try {
+      const [notifs, count] = await Promise.all([
+        NotificationService.getNotifications(adminId),
+        NotificationService.getUnreadCount(adminId)
+      ])
+      setNotifications(notifs)
+      setUnreadCount(count)
+    } catch (err) {
+      console.error('Error loading notifications:', err)
+    }
+  }
+
   useEffect(() => {
     loadAdminData()
+    loadNotifications()
+  }, [])
+
+  // Close panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifPanel(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const handleRoleChange = async (userId, newRole) => {
@@ -83,6 +120,25 @@ export default function AdminModule() {
     }
   }
 
+  const handleMarkAsRead = async (notifId) => {
+    try {
+      await NotificationService.markAsRead(notifId)
+      loadNotifications()
+    } catch (err) {
+      console.error('Error marking notification as read:', err)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    if (!adminId) return
+    try {
+      await NotificationService.markAllAsRead(adminId)
+      loadNotifications()
+    } catch (err) {
+      console.error('Error marking all as read:', err)
+    }
+  }
+
   if (loading) return <div style={{ color: 'var(--gold)', padding: '2rem' }}>Loading Admin Command Center...</div>
 
   return (
@@ -97,18 +153,159 @@ export default function AdminModule() {
           marginBottom: '2rem'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-          <span style={{ color: '#ef4444', fontWeight: '800', fontSize: '0.85rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-            Executive Control Panel
-          </span>
-          <span className="badge badge-red">SYSTEM ADMIN</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ color: '#ef4444', fontWeight: '800', fontSize: '0.85rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                Executive Control Panel
+              </span>
+              <span className="badge badge-red">SYSTEM ADMIN</span>
+            </div>
+            <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', fontFamily: 'Manrope, sans-serif' }}>
+              Platform Management &amp; Security
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '650px' }}>
+              Manage user permissions, review vendor applications, moderate product listings, and monitor global sales metrics.
+            </p>
+          </div>
+
+          {/* Notification Bell */}
+          <div ref={notifRef} style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              id="admin-notif-bell"
+              onClick={() => setShowNotifPanel(p => !p)}
+              style={{
+                position: 'relative',
+                background: unreadCount > 0 ? 'rgba(239,68,68,0.15)' : 'var(--bg-card)',
+                border: `1px solid ${unreadCount > 0 ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+                borderRadius: '12px',
+                padding: '0.65rem 1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: '#fff',
+                fontSize: '1.1rem',
+                transition: 'all 0.2s',
+                minWidth: '60px',
+                justifyContent: 'center'
+              }}
+            >
+              🔔
+              {unreadCount > 0 && (
+                <span style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  borderRadius: '999px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  padding: '0.15rem 0.45rem',
+                  minWidth: '20px',
+                  textAlign: 'center',
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifPanel && (
+              <div
+                id="admin-notif-panel"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 0.75rem)',
+                  right: 0,
+                  width: '380px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-focus)',
+                  borderRadius: 'var(--radius-card)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                  zIndex: 2000,
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Panel Header */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '1rem 1.25rem',
+                  borderBottom: '1px solid var(--border)'
+                }}>
+                  <span style={{ fontWeight: '800', color: '#fff', fontSize: '0.95rem' }}>🔔 Notifications</span>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        fontWeight: '700',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Notification List */}
+                <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      No notifications yet
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => !n.read && handleMarkAsRead(n.id)}
+                        style={{
+                          padding: '0.9rem 1.25rem',
+                          borderBottom: '1px solid var(--border-subtle)',
+                          background: n.read ? 'transparent' : 'rgba(239,68,68,0.06)',
+                          cursor: n.read ? 'default' : 'pointer',
+                          transition: 'background 0.15s',
+                          display: 'flex',
+                          gap: '0.75rem',
+                          alignItems: 'flex-start'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.1rem', flexShrink: 0, marginTop: '0.1rem' }}>
+                          {n.type === 'PRODUCT_ADDED' ? '📦' : '🏪'}
+                        </span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: n.read ? 'var(--text-secondary)' : '#fff',
+                            fontWeight: n.read ? '400' : '600',
+                            lineHeight: '1.4'
+                          }}>
+                            {n.message}
+                          </p>
+                          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(n.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        {!n.read && (
+                          <span style={{
+                            width: '8px', height: '8px', borderRadius: '50%',
+                            background: '#ef4444', flexShrink: 0, marginTop: '0.35rem'
+                          }} />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', fontFamily: 'Manrope, sans-serif' }}>
-          Platform Management & Security
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '650px' }}>
-          Manage user permissions, review vendor applications, moderate product listings, and monitor global sales metrics.
-        </p>
       </div>
 
       {/* Platform Dashboard Metric Cards */}

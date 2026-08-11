@@ -1,7 +1,9 @@
 package com.infosys.auth.service;
 
 import com.infosys.auth.model.Product;
+import com.infosys.auth.model.User;
 import com.infosys.auth.repository.ProductRepository;
+import com.infosys.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +12,15 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository,
+                          UserRepository userRepository,
+                          NotificationService notificationService) {
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Product> getAllProducts(String query, String category, Boolean approved) {
@@ -35,7 +43,15 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        // Notify all admin users about the new pending product
+        String vendorLabel = saved.getVendorName() != null ? saved.getVendorName() : "a vendor";
+        String msg = "New product \"" + saved.getName() + "\" by " + vendorLabel + " is pending approval.";
+        List<User> admins = userRepository.findAll().stream()
+                .filter(u -> u.getRole() == User.Role.ADMIN)
+                .toList();
+        admins.forEach(admin -> notificationService.createNotification(admin.getId(), "PRODUCT_ADDED", msg));
+        return saved;
     }
 
     public Product updateProduct(Long id, Product details) {

@@ -21,15 +21,18 @@ public class AdminService {
     private final ProductRepository productRepository;
     private final VendorProfileRepository vendorProfileRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
     public AdminService(UserRepository userRepository,
                         ProductRepository productRepository,
                         VendorProfileRepository vendorProfileRepository,
-                        OrderRepository orderRepository) {
+                        OrderRepository orderRepository,
+                        NotificationService notificationService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.vendorProfileRepository = vendorProfileRepository;
         this.orderRepository = orderRepository;
+        this.notificationService = notificationService;
     }
 
     public List<User> getAllUsers() {
@@ -57,7 +60,12 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Vendor profile not found: " + vendorId));
         VendorProfile.Status status = VendorProfile.Status.valueOf(statusName.toUpperCase());
         profile.setStatus(status);
-        return vendorProfileRepository.save(profile);
+        VendorProfile saved = vendorProfileRepository.save(profile);
+        // Notify the vendor about their updated application status
+        String statusLabel = status == VendorProfile.Status.APPROVED ? "approved ✅" : "rejected ❌";
+        String msg = "Your vendor application for \"" + saved.getStoreName() + "\" has been " + statusLabel + " by the admin.";
+        notificationService.createNotification(saved.getUserId(), "VENDOR_STATUS_CHANGED", msg);
+        return saved;
     }
 
     public Map<String, Object> getPlatformStats() {
