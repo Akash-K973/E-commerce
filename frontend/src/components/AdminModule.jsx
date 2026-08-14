@@ -528,7 +528,7 @@ export default function AdminModule() {
                     {prod.approved ? (
                       <span className="badge badge-green">Approved</span>
                     ) : (
-                      <span className="badge badge-orange">Pending</span>
+                      <span className="badge badge-red">Pending</span>
                     )}
                   </td>
                   <td style={{ padding: '1rem' }}>{prod.stockQuantity} units</td>

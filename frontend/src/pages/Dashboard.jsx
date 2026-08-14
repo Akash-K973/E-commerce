@@ -73,6 +73,7 @@ export default function Dashboard() {
           isCartOpen={isCartOpen}
           onCloseCart={() => setIsCartOpen(false)}
           onCartUpdated={(cnt) => setCartCount(cnt)}
+          showOrderHistory={false}
         />
       )}
     </div>

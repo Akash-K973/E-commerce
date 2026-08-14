@@ -114,10 +114,13 @@ public class Product {
     public void setApproved(Boolean approved) { this.approved = approved; }
 
     public BigDecimal getDiscountedPrice() {
+        if (price == null) {
+            return BigDecimal.ZERO;
+        }
         if (discount == null || discount.compareTo(BigDecimal.ZERO) <= 0) {
             return price;
         }
-        BigDecimal discountFactor = BigDecimal.ONE.subtract(discount.divide(BigDecimal.valueOf(100)));
-        return price.multiply(discountFactor).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal discountAmount = price.multiply(discount).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        return price.subtract(discountAmount).setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

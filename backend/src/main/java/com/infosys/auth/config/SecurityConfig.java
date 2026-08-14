@@ -49,6 +49,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/vendor/**").permitAll()
                     .requestMatchers("/api/admin/**").permitAll()
                     .requestMatchers("/api/notifications/**").permitAll()
+                    .requestMatchers("/api/payment/**").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
