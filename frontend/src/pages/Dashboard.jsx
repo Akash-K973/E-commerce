@@ -7,11 +7,23 @@ import AdminModule from '../components/AdminModule'
 import CustomerService from '../services/CustomerService'
 import AuthService from '../services/AuthService'
 
+import { useLocation } from 'react-router-dom'
+
 export default function Dashboard() {
   const user = AuthService.getCurrentUser()
   const role = user?.role || 'CUSTOMER'
+  const location = useLocation()
 
-  const [activeTab, setActiveTab] = useState('store')
+  const getInitialTab = () => {
+    const path = location.pathname.toLowerCase()
+    if (path.includes('/admin') && role === 'ADMIN') return 'admin'
+    if (path.includes('/vendor') && (role === 'VENDOR' || role === 'ADMIN')) return 'vendor'
+    if (path.includes('/customer')) return 'customer'
+    if (role === 'ADMIN' && path.includes('/admin')) return 'admin'
+    return 'store'
+  }
+
+  const [activeTab, setActiveTab] = useState(getInitialTab)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
 

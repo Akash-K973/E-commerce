@@ -44,7 +44,7 @@ public class VendorProfile {
     }
 
     public enum Status {
-        PENDING, APPROVED, REJECTED
+        PENDING, APPROVED, REJECTED, SUSPENDED
     }
 
     public VendorProfile() {}

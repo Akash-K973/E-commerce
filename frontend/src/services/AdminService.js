@@ -28,6 +28,11 @@ const AdminService = {
     return response.data
   },
 
+  async getVendorDetails(vendorId) {
+    const response = await axios.get(`${API_URL}/vendors/${vendorId}/details`, { headers: getHeaders() })
+    return response.data
+  },
+
   async updateVendorStatus(vendorId, status) {
     const response = await axios.put(`${API_URL}/vendors/${vendorId}/status`, { status }, { headers: getHeaders() })
     return response.data
@@ -36,7 +41,47 @@ const AdminService = {
   async getPlatformStats() {
     const response = await axios.get(`${API_URL}/stats`, { headers: getHeaders() })
     return response.data
+  },
+
+  async getMarketplaceAnalytics() {
+    const response = await axios.get(`${API_URL}/analytics`, { headers: getHeaders() })
+    return response.data
+  },
+
+  async getAllOrders() {
+    const response = await axios.get(`${API_URL}/orders`, { headers: getHeaders() })
+    return response.data
+  },
+
+  async updateOrderStatus(orderId, status) {
+    const response = await axios.put(`${API_URL}/orders/${orderId}/status`, { status }, { headers: getHeaders() })
+    return response.data
+  },
+
+  async getCommissionData() {
+    const response = await axios.get(`${API_URL}/commissions`, { headers: getHeaders() })
+    return response.data
+  },
+
+  async updateVendorPayoutStatus(vendorId, status) {
+    const response = await axios.put(`${API_URL}/commissions/payout/${vendorId}`, { status }, { headers: getHeaders() })
+    return response.data
+  },
+
+  async getSystemStatus() {
+    const response = await axios.get(`${API_URL}/system-status`, { headers: getHeaders() })
+    return response.data
+  },
+
+  async getReport(type = 'SALES') {
+    const response = await axios.get(`${API_URL}/reports?type=${type}`, { headers: getHeaders() })
+    return response.data
+  },
+
+  exportReportCsvUrl(type = 'SALES') {
+    return `${API_URL}/reports/export?type=${type}`
   }
 }
 
 export default AdminService
+

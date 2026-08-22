@@ -41,8 +41,13 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      await AuthService.login(formData.email, formData.password)
-      navigate('/dashboard')
+      const response = await AuthService.login(formData.email, formData.password)
+      const user = response?.user || AuthService.getCurrentUser()
+      if (user?.role === 'ADMIN') {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (error) {
       const msg = error.response?.data?.message || 'Invalid email or password. Please try again.'
       setApiError(msg)
