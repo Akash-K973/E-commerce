@@ -20,13 +20,16 @@ public class CustomerService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final CommissionService commissionService;
 
     public CustomerService(CartItemRepository cartItemRepository,
                            OrderRepository orderRepository,
-                           ProductRepository productRepository) {
+                           ProductRepository productRepository,
+                           CommissionService commissionService) {
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.commissionService = commissionService;
     }
 
     public List<CartItem> getCart(Long userId) {
@@ -117,6 +120,13 @@ public class CustomerService {
 
         // Clear user cart
         cartItemRepository.deleteAll(cartItems);
+
+        // Generate vendor commission records
+        try {
+            commissionService.createCommissionsForOrder(savedOrder);
+        } catch (Exception e) {
+            System.err.println("Error creating vendor commission for checkout order #" + savedOrder.getId() + ": " + e.getMessage());
+        }
 
         return savedOrder;
     }

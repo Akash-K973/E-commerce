@@ -28,6 +28,7 @@ public class AdminService {
     private final VendorProfileRepository vendorProfileRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
+    private final CommissionService commissionService;
 
     // In-memory store for vendor payout status (default PENDING)
     private final Map<Long, String> vendorPayoutStatuses = new ConcurrentHashMap<>();
@@ -36,12 +37,14 @@ public class AdminService {
                         ProductRepository productRepository,
                         VendorProfileRepository vendorProfileRepository,
                         OrderRepository orderRepository,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        CommissionService commissionService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.vendorProfileRepository = vendorProfileRepository;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
+        this.commissionService = commissionService;
     }
 
     // ==========================================
@@ -244,60 +247,11 @@ public class AdminService {
     // ==========================================
 
     public Map<String, Object> getCommissionData() {
-        BigDecimal commissionRate = new BigDecimal("10.00"); // 10% platform fee
-        List<VendorProfile> vendors = vendorProfileRepository.findAll();
-        List<Map<String, Object>> vendorCommissions = new ArrayList<>();
-
-        BigDecimal totalGrossSales = BigDecimal.ZERO;
-        BigDecimal totalPlatformCommission = BigDecimal.ZERO;
-
-        for (VendorProfile v : vendors) {
-            List<Product> products = productRepository.findByVendorId(v.getUserId());
-            BigDecimal grossSales = products.stream()
-                    .map(p -> p.getDiscountedPrice().multiply(BigDecimal.valueOf(10)))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            if (grossSales.compareTo(BigDecimal.ZERO) == 0) {
-                grossSales = new BigDecimal("2500.00"); // baseline for demo visual completeness
-            }
-
-            BigDecimal platformFee = grossSales.multiply(commissionRate)
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            BigDecimal netPayout = grossSales.subtract(platformFee);
-
-            totalGrossSales = totalGrossSales.add(grossSales);
-            totalPlatformCommission = totalPlatformCommission.add(platformFee);
-
-            String payoutStatus = vendorPayoutStatuses.getOrDefault(v.getId(), "PENDING");
-
-            Map<String, Object> vMap = new HashMap<>();
-            vMap.put("vendorId", v.getId());
-            vMap.put("storeName", v.getStoreName());
-            vMap.put("businessEmail", v.getBusinessEmail());
-            vMap.put("grossSales", grossSales);
-            vMap.put("commissionRate", commissionRate + "%");
-            vMap.put("platformFee", platformFee);
-            vMap.put("netPayout", netPayout);
-            vMap.put("payoutStatus", payoutStatus);
-            vendorCommissions.add(vMap);
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("commissionRate", commissionRate);
-        result.put("totalGrossSales", totalGrossSales);
-        result.put("totalPlatformCommission", totalPlatformCommission);
-        result.put("vendorCommissions", vendorCommissions);
-        return result;
+        return commissionService.getCommissionSummary();
     }
 
     public Map<String, String> updateVendorPayoutStatus(Long vendorId, String status) {
-        vendorPayoutStatuses.put(vendorId, status.toUpperCase());
-        VendorProfile v = vendorProfileRepository.findById(vendorId).orElse(null);
-        if (v != null) {
-            notificationService.createNotification(v.getUserId(), "COMMISSION_PAYOUT",
-                    "Your vendor payout status has been updated to: " + status.toUpperCase());
-        }
-        return Map.of("status", "SUCCESS", "message", "Payout status updated to " + status.toUpperCase());
+        return commissionService.updateVendorPayoutStatus(vendorId, status);
     }
 
     // ==========================================

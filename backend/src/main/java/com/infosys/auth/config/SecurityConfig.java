@@ -50,6 +50,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/admin/**").permitAll()
                     .requestMatchers("/api/notifications/**").permitAll()
                     .requestMatchers("/api/payment/**").permitAll()
+                    .requestMatchers("/api/commissions/**").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

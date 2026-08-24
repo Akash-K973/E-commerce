@@ -68,6 +68,21 @@ const AdminService = {
     return response.data
   },
 
+  async calculateCommission(orderAmount, commissionRate) {
+    const response = await axios.post(`http://localhost:8080/api/commissions/calculate`, { orderAmount, commissionRate }, { headers: getHeaders() })
+    return response.data
+  },
+
+  async updateCommissionRecordStatus(commissionId, status) {
+    const response = await axios.put(`http://localhost:8080/api/commissions/${commissionId}/status`, { status }, { headers: getHeaders() })
+    return response.data
+  },
+
+  async updateCommissionRate(rate) {
+    const response = await axios.put(`http://localhost:8080/api/commissions/rate`, { rate }, { headers: getHeaders() })
+    return response.data
+  },
+
   async getSystemStatus() {
     const response = await axios.get(`${API_URL}/system-status`, { headers: getHeaders() })
     return response.data

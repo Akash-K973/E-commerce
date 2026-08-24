@@ -19,6 +19,14 @@ export default function AdminModule() {
   const [reportData, setReportData] = useState(null)
   const [activeReportType, setActiveReportType] = useState('SALES')
 
+  // Commission Interactive Tester & Rate Config state
+  const [testOrderAmount, setTestOrderAmount] = useState('10000')
+  const [testCommissionRate, setTestCommissionRate] = useState('10')
+  const [calcResult, setCalcResult] = useState(null)
+  const [calcLoading, setCalcLoading] = useState(false)
+  const [editingRate, setEditingRate] = useState(false)
+  const [newConfigRate, setNewConfigRate] = useState('10')
+
   const [loading, setLoading] = useState(true)
   const [activeAdminTab, setActiveAdminTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'products' | 'analytics' | 'orders' | 'commissions' | 'system' | 'reports'
 
@@ -162,6 +170,41 @@ export default function AdminModule() {
       setCommissions(freshComm)
     } catch (err) {
       console.error('Error updating payout status:', err)
+    }
+  }
+
+  const handleRunCommissionTest = async (amtOverride, rateOverride) => {
+    const amt = amtOverride !== undefined ? amtOverride : testOrderAmount
+    const rate = rateOverride !== undefined ? rateOverride : testCommissionRate
+    setCalcLoading(true)
+    try {
+      const res = await AdminService.calculateCommission(amt, rate)
+      setCalcResult(res)
+    } catch (err) {
+      console.error('Error calculating commission test:', err)
+    } finally {
+      setCalcLoading(false)
+    }
+  }
+
+  const handleUpdateRecordStatus = async (recordId, newStatus) => {
+    try {
+      await AdminService.updateCommissionRecordStatus(recordId, newStatus)
+      const freshComm = await AdminService.getCommissionData()
+      setCommissions(freshComm)
+    } catch (err) {
+      console.error('Error updating commission record status:', err)
+    }
+  }
+
+  const handleSaveConfigRate = async () => {
+    try {
+      await AdminService.updateCommissionRate(newConfigRate)
+      setEditingRate(false)
+      const freshComm = await AdminService.getCommissionData()
+      setCommissions(freshComm)
+    } catch (err) {
+      console.error('Error updating config rate:', err)
     }
   }
 
@@ -972,32 +1015,142 @@ export default function AdminModule() {
       {/* TAB 6: COMMISSION MANAGEMENT */}
       {activeAdminTab === 'commissions' && commissions && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          {/* Commission Metric Summary Cards */}
-          <div className="dashboard-grid">
+          {/* Financial Overview Metric Cards */}
+          <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
             <div className="info-card">
               <div className="card-icon icon-purple">⚡</div>
-              <div className="card-label">Marketplace Standard Rate</div>
+              <div className="card-label">Marketplace Configured Rate</div>
               <div className="card-value" style={{ color: 'var(--gold)', fontSize: '1.6rem', fontWeight: '800' }}>
                 {commissions.commissionRate}%
               </div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Platform service fee</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>Default platform service fee</div>
             </div>
 
             <div className="info-card">
               <div className="card-icon icon-blue">💰</div>
               <div className="card-label">Total Gross Seller Volume</div>
               <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800' }}>
-                ${Number(commissions.totalGrossSales).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ₹{Number(commissions.totalGrossSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>Total sales across platform</div>
             </div>
 
             <div className="info-card">
               <div className="card-icon icon-green">👑</div>
               <div className="card-label">Platform Net Earnings</div>
               <div className="card-value" style={{ color: '#86efac', fontSize: '1.6rem', fontWeight: '800' }}>
-                ${Number(commissions.totalPlatformCommission).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ₹{Number(commissions.totalPlatformCommission || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>Platform retained fee</div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-purple">🛍️</div>
+              <div className="card-label">Net Vendor Payouts</div>
+              <div className="card-value" style={{ color: '#60a5fa', fontSize: '1.6rem', fontWeight: '800' }}>
+                ₹{Number(commissions.totalVendorNetPayout || (commissions.totalGrossSales - commissions.totalPlatformCommission) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>Net owed to vendors</div>
+            </div>
+          </div>
+
+          {/* Interactive Live Commission Calculator Widget */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-focus)', borderRadius: 'var(--radius-card)', padding: '1.5rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h3 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚡ Live Commission Calculation Simulator
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                  Execute backend business logic REST API (`/api/commissions/calculate`) to test any order amount &amp; commission rate
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTestOrderAmount('10000')
+                    setTestCommissionRate('10')
+                    handleRunCommissionTest('10000', '10')
+                  }}
+                  style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', color: '#93c5fd', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '600' }}
+                >
+                  Preset Case 1 (₹10,000 @ 10%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTestOrderAmount('5000')
+                    setTestCommissionRate('5')
+                    handleRunCommissionTest('5000', '5')
+                  }}
+                  style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid #a855f7', color: '#c084fc', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '600' }}
+                >
+                  Preset Case 2 (₹5,000 @ 5%)
+                </button>
               </div>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end', marginBottom: '1.2rem' }}>
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.3rem' }}>Order Amount (₹)</label>
+                <input
+                  type="number"
+                  value={testOrderAmount}
+                  onChange={(e) => setTestOrderAmount(e.target.value)}
+                  placeholder="e.g. 10000"
+                  style={{ width: '100%', padding: '0.6rem 0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.3rem' }}>Commission Rate (%)</label>
+                <input
+                  type="number"
+                  value={testCommissionRate}
+                  onChange={(e) => setTestCommissionRate(e.target.value)}
+                  placeholder="e.g. 10"
+                  style={{ width: '100%', padding: '0.6rem 0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => handleRunCommissionTest()}
+                  disabled={calcLoading}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '0.65rem 1rem' }}
+                >
+                  {calcLoading ? 'Calculating...' : 'Calculate via REST API'}
+                </button>
+              </div>
+            </div>
+
+            {calcResult && (
+              <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid var(--border-focus)', borderRadius: '8px', padding: '1.2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Input Order Amount</div>
+                  <div style={{ color: '#fff', fontSize: '1.2rem', fontWeight: '700' }}>₹{Number(calcResult.orderAmount).toLocaleString('en-IN')}</div>
+                </div>
+
+                <div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Commission Rate</div>
+                  <div style={{ color: 'var(--gold)', fontSize: '1.2rem', fontWeight: '700' }}>{calcResult.commissionRate}%</div>
+                </div>
+
+                <div style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', padding: '0.6rem 0.8rem', borderRadius: '6px' }}>
+                  <div style={{ color: '#fef08a', fontSize: '0.78rem', fontWeight: '600' }}>Platform Commission</div>
+                  <div style={{ color: '#fde047', fontSize: '1.3rem', fontWeight: '800' }}>₹{Number(calcResult.commissionAmount).toLocaleString('en-IN')}</div>
+                </div>
+
+                <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', padding: '0.6rem 0.8rem', borderRadius: '6px' }}>
+                  <div style={{ color: '#86efac', fontSize: '0.78rem', fontWeight: '600' }}>Vendor Amount</div>
+                  <div style={{ color: '#4ade80', fontSize: '1.3rem', fontWeight: '800' }}>₹{Number(calcResult.vendorAmount).toLocaleString('en-IN')}</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Vendor Commission Breakdown Table */}
@@ -1010,7 +1163,7 @@ export default function AdminModule() {
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                   <th style={{ padding: '1rem' }}>Vendor Store</th>
                   <th style={{ padding: '1rem' }}>Gross Sales</th>
-                  <th style={{ padding: '1rem' }}>Platform Fee (10%)</th>
+                  <th style={{ padding: '1rem' }}>Platform Fee</th>
                   <th style={{ padding: '1rem' }}>Net Vendor Payout</th>
                   <th style={{ padding: '1rem' }}>Payout Status</th>
                   <th style={{ padding: '1rem', textAlign: 'right' }}>Process Action</th>
@@ -1024,13 +1177,13 @@ export default function AdminModule() {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{vc.businessEmail}</div>
                     </td>
                     <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>
-                      ${Number(vc.grossSales).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ₹{Number(vc.grossSales).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '1rem', fontWeight: '700', color: 'var(--gold)' }}>
-                      ${Number(vc.platformFee).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ₹{Number(vc.platformFee).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '1rem', fontWeight: '800', color: '#86efac' }}>
-                      ${Number(vc.netPayout).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ₹{Number(vc.netPayout).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <span className={vc.payoutStatus === 'PAID' ? 'badge badge-green' : 'badge badge-orange'}>
@@ -1059,6 +1212,74 @@ export default function AdminModule() {
               </tbody>
             </table>
           </div>
+
+          {/* Transactional Order Commission Records Table */}
+          {commissions.commissionRecords && commissions.commissionRecords.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
+                <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700' }}>📜 Order Commission Transactions (PostgreSQL Records)</h3>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '1rem' }}>Record ID</th>
+                    <th style={{ padding: '1rem' }}>Date</th>
+                    <th style={{ padding: '1rem' }}>Order ID</th>
+                    <th style={{ padding: '1rem' }}>Vendor</th>
+                    <th style={{ padding: '1rem' }}>Order Amount</th>
+                    <th style={{ padding: '1rem' }}>Rate</th>
+                    <th style={{ padding: '1rem' }}>Platform Fee</th>
+                    <th style={{ padding: '1rem' }}>Vendor Amount</th>
+                    <th style={{ padding: '1rem' }}>Status</th>
+                    <th style={{ padding: '1rem', textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {commissions.commissionRecords.map((cr) => (
+                    <tr key={cr.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '1rem', fontWeight: '700', color: 'var(--gold)' }}>#COMM-{cr.id}</td>
+                      <td style={{ padding: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {cr.createdAt ? new Date(cr.createdAt).toLocaleString() : 'N/A'}
+                      </td>
+                      <td style={{ padding: '1rem', fontWeight: '600', color: '#fff' }}>#ORD-{cr.orderId}</td>
+                      <td style={{ padding: '1rem', fontWeight: '600', color: '#fff' }}>{cr.vendorName || `Vendor #${cr.vendorId}`}</td>
+                      <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>
+                        ₹{Number(cr.orderAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '1rem', color: 'var(--gold)' }}>{cr.commissionRate}%</td>
+                      <td style={{ padding: '1rem', fontWeight: '700', color: '#fde047' }}>
+                        ₹{Number(cr.commissionAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '1rem', fontWeight: '800', color: '#4ade80' }}>
+                        ₹{Number(cr.vendorAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span className={cr.status === 'PAID' ? 'badge badge-green' : 'badge badge-orange'}>
+                          {cr.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleUpdateRecordStatus(cr.id, cr.status === 'PAID' ? 'PENDING' : 'PAID')}
+                          style={{
+                            background: cr.status === 'PAID' ? 'rgba(245,158,11,0.15)' : 'rgba(22,163,74,0.2)',
+                            border: cr.status === 'PAID' ? '1px solid var(--warning)' : '1px solid var(--success)',
+                            color: cr.status === 'PAID' ? '#fde047' : '#86efac',
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                          }}
+                        >
+                          {cr.status === 'PAID' ? 'Mark Pending' : 'Mark Paid'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

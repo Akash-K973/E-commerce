@@ -22,10 +22,13 @@ com\infosys\auth\dto\ForgotPasswordRequest.class
 com\infosys\auth\model\Order$OrderStatus.class
 com\infosys\auth\service\CustomerService.class
 com\infosys\auth\dto\ResetPasswordRequest.class
+com\infosys\auth\model\VendorCommission.class
 com\infosys\auth\model\Order.class
 com\infosys\auth\model\VendorProfile$Status.class
 com\infosys\auth\model\OrderItem.class
+com\infosys\auth\controller\CommissionController.class
 com\infosys\auth\model\CartItem.class
+com\infosys\auth\service\CommissionService.class
 com\infosys\auth\repository\PasswordResetTokenRepository.class
 com\infosys\auth\controller\VendorController.class
 com\infosys\auth\security\UserDetailsServiceImpl.class
@@ -43,6 +46,7 @@ com\infosys\auth\repository\ProductRepository.class
 com\infosys\auth\controller\AdminController.class
 com\infosys\auth\dto\ProfileResponse$Builder.class
 com\infosys\auth\repository\UserRepository.class
+com\infosys\auth\repository\VendorCommissionRepository.class
 com\infosys\auth\config\DataInitializer.class
 com\infosys\auth\AuthBackendApplication.class
 com\infosys\auth\repository\OrderRepository.class

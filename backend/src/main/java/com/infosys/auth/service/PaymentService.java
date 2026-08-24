@@ -36,13 +36,16 @@ public class PaymentService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final CommissionService commissionService;
 
     public PaymentService(CartItemRepository cartItemRepository,
                           OrderRepository orderRepository,
-                          ProductRepository productRepository) {
+                          ProductRepository productRepository,
+                          CommissionService commissionService) {
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.commissionService = commissionService;
     }
 
     public String getKeyId() {
@@ -176,7 +179,16 @@ public class PaymentService {
             cartItemRepository.deleteAll(cartItems);
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        // Generate vendor commission records
+        try {
+            commissionService.createCommissionsForOrder(savedOrder);
+        } catch (Exception e) {
+            System.err.println("Error creating vendor commission for order #" + savedOrder.getId() + ": " + e.getMessage());
+        }
+
+        return savedOrder;
     }
 
     private boolean verifySignature(String orderId, String paymentId, String signature) {
