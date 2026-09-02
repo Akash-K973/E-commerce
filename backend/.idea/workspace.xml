@@ -6,18 +6,49 @@
   <component name="ChangeListManager">
     <list default="true" id="1339d2da-596e-4737-aa21-b0fdefc1eed0" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/controller/AdminController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/VendorProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/VendorProfile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/config/DataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/config/DataInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/controller/CustomerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/controller/CustomerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/dto/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/dto/AuthResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/dto/RazorpayOrderRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/dto/RazorpayOrderRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/Order.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/Order.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/model/User.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/repository/OrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/repository/OrderRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/AdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/controller/AdminController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/controller/AdminController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/VendorProfile$Status.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/VendorProfile$Status.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/CustomerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/CustomerService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/PaymentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/infosys/auth/service/PaymentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/config/DataInitializer.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/config/DataInitializer.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/controller/CustomerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/controller/CustomerController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/AuthResponse$Builder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/AuthResponse$Builder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/AuthResponse.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/AuthResponse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/RazorpayOrderRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/dto/RazorpayOrderRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/Order$OrderStatus.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/Order$OrderStatus.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/Order.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/Order.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User$Builder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User$Builder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User$Role.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User$Role.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/model/User.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/repository/OrderRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/repository/OrderRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/AdminService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/AdminService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/AuthService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/AuthService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/CustomerService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/CustomerService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/PaymentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/infosys/auth/service/PaymentService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/2026-08-10T11-21-22_162.dumpstream" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/2026-08-24T15-11-42_976.dumpstream" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/2026-08-24T15-11-54_803.dumpstream" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/2026-08-24T15-12-13_885.dumpstream" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/TEST-com.infosys.auth.service.CommissionServiceTest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/TEST-com.infosys.auth.service.ProductServiceTest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/com.infosys.auth.service.CommissionServiceTest.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/com.infosys.auth.service.ProductServiceTest.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/com/infosys/auth/service/CommissionServiceTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/com/infosys/auth/service/ProductServiceTest.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/components/AdminModule.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/components/AdminModule.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/pages/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/pages/Dashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/pages/LoginPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/services/AdminService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/AdminService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/components/CustomerModule.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/components/CustomerModule.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/services/PaymentService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/PaymentService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -23,6 +23,15 @@ public class Order {
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "subtotal_amount")
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "discount_amount")
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "coupon_code")
+    private String couponCode;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PROCESSING;
 
@@ -51,13 +60,70 @@ public class Order {
     @Column(name = "payment_method")
     private String paymentMethod = "RAZORPAY_TEST";
 
+    @Column(name = "warehouse_id")
+    private Long warehouseId;
+
+    @Column(name = "warehouse_name")
+    private String warehouseName;
+
+    @Column(name = "warehouse_code")
+    private String warehouseCode;
+
+    @Column(name = "picked_at")
+    private LocalDateTime pickedAt;
+
+    @Column(name = "picked_by_staff_id")
+    private Long pickedByStaffId;
+
+    @Column(name = "picked_by_staff_name")
+    private String pickedByStaffName;
+
+    @Column(name = "packed_at")
+    private LocalDateTime packedAt;
+
+    @Column(name = "packed_by_staff_id")
+    private Long packedByStaffId;
+
+    @Column(name = "packed_by_staff_name")
+    private String packedByStaffName;
+
+    @Column(name = "carrier_name")
+    private String carrierName;
+
+    @Column(name = "tracking_number")
+    private String trackingNumber;
+
+    @Column(name = "shipped_at")
+    private LocalDateTime shippedAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "return_reason", length = 1000)
+    private String returnReason;
+
+    @Column(name = "return_status")
+    private String returnStatus;
+
+    @Column(name = "return_requested_at")
+    private LocalDateTime returnRequestedAt;
+
+    @Column(name = "qc_remarks", length = 1000)
+    private String qcRemarks;
+
+    @Column(name = "qc_status")
+    private String qcStatus;
+
+    @Column(name = "refund_amount")
+    private BigDecimal refundAmount;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
     public enum OrderStatus {
-        PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+        PENDING, CONFIRMED, PROCESSING, ALLOCATED, PICKED, PACKED, SHIPPED, DELIVERED, CANCELLED, RETURN_REQUESTED, RETURN_APPROVED, RETURN_REJECTED, RETURNED, REFUNDED
     }
 
     public Order() {}
@@ -107,4 +173,70 @@ public class Order {
 
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public BigDecimal getSubtotalAmount() { return subtotalAmount; }
+    public void setSubtotalAmount(BigDecimal subtotalAmount) { this.subtotalAmount = subtotalAmount; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public String getCouponCode() { return couponCode; }
+    public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
+
+    public Long getWarehouseId() { return warehouseId; }
+    public void setWarehouseId(Long warehouseId) { this.warehouseId = warehouseId; }
+
+    public String getWarehouseName() { return warehouseName; }
+    public void setWarehouseName(String warehouseName) { this.warehouseName = warehouseName; }
+
+    public String getWarehouseCode() { return warehouseCode; }
+    public void setWarehouseCode(String warehouseCode) { this.warehouseCode = warehouseCode; }
+
+    public LocalDateTime getPickedAt() { return pickedAt; }
+    public void setPickedAt(LocalDateTime pickedAt) { this.pickedAt = pickedAt; }
+
+    public Long getPickedByStaffId() { return pickedByStaffId; }
+    public void setPickedByStaffId(Long pickedByStaffId) { this.pickedByStaffId = pickedByStaffId; }
+
+    public String getPickedByStaffName() { return pickedByStaffName; }
+    public void setPickedByStaffName(String pickedByStaffName) { this.pickedByStaffName = pickedByStaffName; }
+
+    public LocalDateTime getPackedAt() { return packedAt; }
+    public void setPackedAt(LocalDateTime packedAt) { this.packedAt = packedAt; }
+
+    public Long getPackedByStaffId() { return packedByStaffId; }
+    public void setPackedByStaffId(Long packedByStaffId) { this.packedByStaffId = packedByStaffId; }
+
+    public String getPackedByStaffName() { return packedByStaffName; }
+    public void setPackedByStaffName(String packedByStaffName) { this.packedByStaffName = packedByStaffName; }
+
+    public String getCarrierName() { return carrierName; }
+    public void setCarrierName(String carrierName) { this.carrierName = carrierName; }
+
+    public String getTrackingNumber() { return trackingNumber; }
+    public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+
+    public LocalDateTime getShippedAt() { return shippedAt; }
+    public void setShippedAt(LocalDateTime shippedAt) { this.shippedAt = shippedAt; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    public String getReturnReason() { return returnReason; }
+    public void setReturnReason(String returnReason) { this.returnReason = returnReason; }
+
+    public String getReturnStatus() { return returnStatus; }
+    public void setReturnStatus(String returnStatus) { this.returnStatus = returnStatus; }
+
+    public LocalDateTime getReturnRequestedAt() { return returnRequestedAt; }
+    public void setReturnRequestedAt(LocalDateTime returnRequestedAt) { this.returnRequestedAt = returnRequestedAt; }
+
+    public String getQcRemarks() { return qcRemarks; }
+    public void setQcRemarks(String qcRemarks) { this.qcRemarks = qcRemarks; }
+
+    public String getQcStatus() { return qcStatus; }
+    public void setQcStatus(String qcStatus) { this.qcStatus = qcStatus; }
+
+    public BigDecimal getRefundAmount() { return refundAmount; }
+    public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }
 }

@@ -3,6 +3,8 @@ import AdminService from '../services/AdminService'
 import ProductService from '../services/ProductService'
 import NotificationService from '../services/NotificationService'
 import AuthService from '../services/AuthService'
+import CouponService from '../services/CouponService'
+import WarehouseService from '../services/WarehouseService'
 
 export default function AdminModule() {
   const adminUser = AuthService.getCurrentUser()
@@ -19,6 +21,25 @@ export default function AdminModule() {
   const [reportData, setReportData] = useState(null)
   const [activeReportType, setActiveReportType] = useState('SALES')
 
+  // Coupon & Promotion State
+  const [coupons, setCoupons] = useState([])
+  const [couponAnalytics, setCouponAnalytics] = useState(null)
+  const [couponUsages, setCouponUsages] = useState([])
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    discountType: 'PERCENTAGE',
+    discountValue: '',
+    minOrderAmount: '',
+    maxDiscountAmount: '',
+    usageLimit: '',
+    startDate: '',
+    expiryDate: '',
+    active: true
+  })
+  const [savingCoupon, setSavingCoupon] = useState(false)
+  const [couponFormError, setCouponFormError] = useState('')
+
   // Commission Interactive Tester & Rate Config state
   const [testOrderAmount, setTestOrderAmount] = useState('10000')
   const [testCommissionRate, setTestCommissionRate] = useState('10')
@@ -28,7 +49,27 @@ export default function AdminModule() {
   const [newConfigRate, setNewConfigRate] = useState('10')
 
   const [loading, setLoading] = useState(true)
-  const [activeAdminTab, setActiveAdminTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'products' | 'analytics' | 'orders' | 'commissions' | 'system' | 'reports'
+  const [activeAdminTab, setActiveAdminTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'products' | 'analytics' | 'orders' | 'commissions' | 'coupons' | 'system' | 'reports' | 'warehouse'
+
+  // Warehouse state
+  const [warehouses, setWarehouses] = useState([])
+  const [warehouseAnalytics, setWarehouseAnalytics] = useState(null)
+  const [warehouseStaff, setWarehouseStaff] = useState([])
+  const [selectedWhInventory, setSelectedWhInventory] = useState(null)
+  const [whInventory, setWhInventory] = useState([])
+  const [whMovements, setWhMovements] = useState([])
+  const [whOrders, setWhOrders] = useState([])
+  const [whLoading, setWhLoading] = useState(false)
+  const [assigningStaff, setAssigningStaff] = useState(null)
+  const [showAddWarehouseForm, setShowAddWarehouseForm] = useState(false)
+  const [newWhForm, setNewWhForm] = useState({ name: '', code: '', locationCity: '', address: '', capacity: 50000, contactNumber: '', contactEmail: '' })
+  const [savingWh, setSavingWh] = useState(false)
+
+  // Admin Inward Stock state
+  const [showAdminInwardModal, setShowAdminInwardModal] = useState(false)
+  const [adminInwardForm, setAdminInwardForm] = useState({ productId: '', quantity: 100, aisleBin: 'Aisle A-01', note: 'Admin initial stock inward' })
+  const [adminInwardLoading, setAdminInwardLoading] = useState(false)
+
 
   // Vendor Detail Modal state
   const [selectedVendorDetails, setSelectedVendorDetails] = useState(null)
@@ -43,6 +84,21 @@ export default function AdminModule() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifPanel, setShowNotifPanel] = useState(false)
   const notifRef = useRef(null)
+
+  const loadCouponData = async () => {
+    try {
+      const [allCoupons, allAnalytics, allUsages] = await Promise.all([
+        CouponService.getAllCoupons(),
+        CouponService.getAnalytics(),
+        CouponService.getUsageHistory()
+      ])
+      setCoupons(allCoupons || [])
+      setCouponAnalytics(allAnalytics || null)
+      setCouponUsages(allUsages || [])
+    } catch (err) {
+      console.error('Error loading coupon data:', err)
+    }
+  }
 
   const loadAdminData = async () => {
     setLoading(true)
@@ -67,12 +123,94 @@ export default function AdminModule() {
       setCommissions(commissionsRes)
       setSystemStatus(sysRes)
       setReportData(reportRes)
+      await loadCouponData()
+      // Load warehouse overview data in background
+      loadWarehouseData().catch(e => console.warn('Warehouse data load failed:', e))
     } catch (err) {
       console.error('Error loading admin metrics:', err)
     } finally {
       setLoading(false)
     }
   }
+
+  const loadWarehouseData = async () => {
+    try {
+      const whList = await WarehouseService.getWarehouses().catch(e => { console.warn('Warehouses load err:', e); return []; })
+      const whAnalytics = await WarehouseService.getAnalytics().catch(e => { console.warn('Analytics load err:', e); return null; })
+      const whStaff = await WarehouseService.getWarehouseStaff().catch(e => { console.warn('Staff load err:', e); return []; })
+      const whOrdList = await WarehouseService.getOrderQueue(null).catch(e => { console.warn('Orders load err:', e); return []; })
+      const movList = await WarehouseService.getStockMovements(null).catch(e => { console.warn('Movements load err:', e); return []; })
+
+      setWarehouses(whList || [])
+      setWarehouseAnalytics(whAnalytics || null)
+      setWarehouseStaff(whStaff || [])
+      setWhOrders(whOrdList || [])
+      setWhMovements(movList || [])
+    } catch (err) {
+      console.warn('Warehouse data error:', err)
+    }
+  }
+
+  const loadWhInventory = async (whId) => {
+    setWhLoading(true)
+    try {
+      const inv = await WarehouseService.getInventory(whId)
+      setWhInventory(inv || [])
+      setSelectedWhInventory(whId)
+    } catch (err) {
+      console.error('Inventory load error:', err)
+    } finally { setWhLoading(false) }
+  }
+
+  const handleAssignStaff = async (userId, warehouseId) => {
+    try {
+      await WarehouseService.assignStaffWarehouse(userId, warehouseId)
+      await loadWarehouseData()
+      setAssigningStaff(null)
+      alert('Staff assigned successfully!')
+    } catch (err) {
+      alert('Failed to assign: ' + (err.response?.data?.message || err.message))
+    }
+  }
+
+  const handleCreateWarehouse = async (e) => {
+    e.preventDefault()
+    setSavingWh(true)
+    try {
+      await WarehouseService.createWarehouse({ ...newWhForm, active: true })
+      setShowAddWarehouseForm(false)
+      setNewWhForm({ name: '', code: '', locationCity: '', address: '', capacity: 50000, contactNumber: '', contactEmail: '' })
+      await loadWarehouseData()
+    } catch (err) {
+      alert('Failed to create warehouse: ' + (err.response?.data?.message || err.message))
+    } finally { setSavingWh(false) }
+  }
+
+  const handleAdminInwardStock = async (e) => {
+    e.preventDefault()
+    if (!adminInwardForm.productId) { alert('Please select a product'); return }
+    if (!selectedWhInventory) { alert('No warehouse selected'); return }
+    setAdminInwardLoading(true)
+    try {
+      await WarehouseService.inwardStock(selectedWhInventory, {
+        productId: Number(adminInwardForm.productId),
+        quantity: Number(adminInwardForm.quantity),
+        staffId: adminId || 1,
+        staffName: 'Administrator',
+        aisleBin: adminInwardForm.aisleBin,
+        note: adminInwardForm.note
+      })
+      alert('Stock successfully added to warehouse!')
+      setShowAdminInwardModal(false)
+      setAdminInwardForm({ productId: '', quantity: 100, aisleBin: 'Aisle A-01', note: 'Stock inward replenishment' })
+      await loadWhInventory(selectedWhInventory)
+      await loadWarehouseData()
+    } catch (err) {
+      alert('Failed to inward stock: ' + (err.response?.data?.message || err.message))
+    } finally { setAdminInwardLoading(false) }
+  }
+
+
 
   const loadNotifications = async () => {
     if (!adminId) return
@@ -244,6 +382,62 @@ export default function AdminModule() {
       loadNotifications()
     } catch (err) {
       console.error('Error marking all as read:', err)
+    }
+  }
+
+  const handleCreateCoupon = async (e) => {
+    e.preventDefault()
+    setSavingCoupon(true)
+    setCouponFormError('')
+    try {
+      await CouponService.createCoupon({
+        code: couponForm.code.trim().toUpperCase(),
+        discountType: couponForm.discountType,
+        discountValue: Number(couponForm.discountValue),
+        minOrderAmount: couponForm.minOrderAmount ? Number(couponForm.minOrderAmount) : null,
+        maxDiscountAmount: couponForm.maxDiscountAmount ? Number(couponForm.maxDiscountAmount) : null,
+        usageLimit: couponForm.usageLimit ? parseInt(couponForm.usageLimit) : null,
+        startDate: couponForm.startDate ? new Date(couponForm.startDate).toISOString() : null,
+        expiryDate: couponForm.expiryDate ? new Date(couponForm.expiryDate).toISOString() : null,
+        active: couponForm.active
+      })
+      setShowCouponModal(false)
+      setCouponForm({
+        code: '',
+        discountType: 'PERCENTAGE',
+        discountValue: '',
+        minOrderAmount: '',
+        maxDiscountAmount: '',
+        usageLimit: '',
+        startDate: '',
+        expiryDate: '',
+        active: true
+      })
+      loadCouponData()
+    } catch (err) {
+      console.error('Error creating coupon:', err)
+      setCouponFormError(err.response?.data?.message || err.message || 'Failed to create coupon')
+    } finally {
+      setSavingCoupon(false)
+    }
+  }
+
+  const handleToggleCoupon = async (couponId) => {
+    try {
+      await CouponService.toggleStatus(couponId)
+      loadCouponData()
+    } catch (err) {
+      console.error('Error toggling coupon status:', err)
+    }
+  }
+
+  const handleDeleteCoupon = async (couponId) => {
+    if (!window.confirm('Are you sure you want to delete this coupon?')) return
+    try {
+      await CouponService.deleteCoupon(couponId)
+      loadCouponData()
+    } catch (err) {
+      console.error('Error deleting coupon:', err)
     }
   }
 
@@ -483,6 +677,13 @@ export default function AdminModule() {
         </button>
 
         <button
+          onClick={() => setActiveAdminTab('coupons')}
+          style={activeAdminTab === 'coupons' ? activeTabStyle : tabStyle}
+        >
+          🎟️ Coupons &amp; Promotions ({coupons.length})
+        </button>
+
+        <button
           onClick={() => setActiveAdminTab('system')}
           style={activeAdminTab === 'system' ? activeTabStyle : tabStyle}
         >
@@ -494,6 +695,14 @@ export default function AdminModule() {
           style={activeAdminTab === 'reports' ? activeTabStyle : tabStyle}
         >
           📑 Business Reports
+        </button>
+
+        <button
+          id="admin-tab-warehouse"
+          onClick={() => { setActiveAdminTab('warehouse'); loadWarehouseData(); }}
+          style={activeAdminTab === 'warehouse' ? activeTabStyle : tabStyle}
+        >
+          🏭 Warehouse Management ({warehouses.length})
         </button>
       </div>
 
@@ -1521,6 +1730,744 @@ export default function AdminModule() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {/* TAB 8: COUPONS & PROMOTIONS ENGINE */}
+      {activeAdminTab === 'coupons' && (
+        <div>
+          {/* Coupon Analytics KPI Cards */}
+          <div className="dashboard-grid" style={{ marginBottom: '2.5rem' }}>
+            <div className="info-card">
+              <div className="card-icon icon-purple">🎟️</div>
+              <div className="card-label">Total Coupons</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800' }}>
+                {couponAnalytics?.totalCoupons ?? coupons.length}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                Total promotional campaigns created
+              </div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-green">⚡</div>
+              <div className="card-label">Active Campaigns</div>
+              <div className="card-value" style={{ color: '#22c55e', fontSize: '1.6rem', fontWeight: '800' }}>
+                {couponAnalytics?.activeCoupons ?? coupons.filter(c => c.active).length}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                Currently valid and live for checkout
+              </div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-blue">🛒</div>
+              <div className="card-label">Total Redemptions</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800' }}>
+                {couponAnalytics?.totalUsageCount ?? couponUsages.length}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                Orders placed using promotional coupons
+              </div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-gold">💎</div>
+              <div className="card-label">Total Discounts Given</div>
+              <div className="card-value" style={{ color: 'var(--gold)', fontSize: '1.6rem', fontWeight: '800' }}>
+                ₹{couponAnalytics?.totalDiscountGiven ? Number(couponAnalytics.totalDiscountGiven).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                Cumulative savings provided to customers
+              </div>
+            </div>
+          </div>
+
+          {/* Coupon Campaigns Header & Action */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#fff', margin: 0 }}>
+                Promotional Campaigns &amp; Discount Vouchers
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
+                Configure discount rules, track redemption limits, and manage coupon lifecycle
+              </p>
+            </div>
+
+            <button
+              onClick={() => { setCouponFormError(''); setShowCouponModal(true) }}
+              style={{
+                background: 'var(--gold)',
+                color: '#000',
+                border: 'none',
+                padding: '0.75rem 1.25rem',
+                borderRadius: 'var(--radius-btn)',
+                fontWeight: '800',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 15px rgba(212, 175, 55, 0.3)'
+              }}
+            >
+              <span>➕</span> Create New Coupon
+            </button>
+          </div>
+
+          {/* Coupon Campaigns Table */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden', marginBottom: '2.5rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)' }}>
+                  <th style={{ padding: '1rem' }}>Coupon Code</th>
+                  <th style={{ padding: '1rem' }}>Discount</th>
+                  <th style={{ padding: '1rem' }}>Rules &amp; Limits</th>
+                  <th style={{ padding: '1rem' }}>Redemptions</th>
+                  <th style={{ padding: '1rem' }}>Validity</th>
+                  <th style={{ padding: '1rem' }}>Status</th>
+                  <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {coupons.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No coupons created yet. Click "Create New Coupon" to start a campaign.
+                    </td>
+                  </tr>
+                ) : (
+                  coupons.map((cpn) => {
+                    const isExpired = cpn.expiryDate && new Date(cpn.expiryDate) < new Date()
+                    const isLimitReached = cpn.usageLimit && cpn.usedCount >= cpn.usageLimit
+                    return (
+                      <tr key={cpn.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(212, 175, 55, 0.12)', border: '1px solid var(--gold)', padding: '0.3rem 0.75rem', borderRadius: '8px' }}>
+                            <span style={{ fontWeight: '800', color: 'var(--gold)', letterSpacing: '0.05em' }}>{cpn.code}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem' }}>
+                          <span style={{ fontWeight: '700', color: '#fff', fontSize: '1rem' }}>
+                            {cpn.discountType === 'PERCENTAGE' ? `${cpn.discountValue}% OFF` : `₹${Number(cpn.discountValue).toLocaleString()} OFF`}
+                          </span>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {cpn.discountType === 'PERCENTAGE' ? 'Percentage Discount' : 'Flat Amount Discount'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                          <div>Min Order: {cpn.minOrderAmount ? `₹${Number(cpn.minOrderAmount).toLocaleString()}` : 'None'}</div>
+                          {cpn.maxDiscountAmount && (
+                            <div style={{ color: 'var(--text-muted)' }}>Max Cap: ₹{Number(cpn.maxDiscountAmount).toLocaleString()}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ fontWeight: '700', color: isLimitReached ? '#ef4444' : '#fff' }}>
+                            {cpn.usedCount || 0} / {cpn.usageLimit ? cpn.usageLimit : '∞'}
+                          </div>
+                          {cpn.usageLimit && (
+                            <div style={{ width: '100px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', marginTop: '0.3rem', overflow: 'hidden' }}>
+                              <div style={{ width: `${Math.min(100, ((cpn.usedCount || 0) / cpn.usageLimit) * 100)}%`, height: '100%', background: isLimitReached ? '#ef4444' : 'var(--gold)' }} />
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          <div>From: {cpn.startDate ? new Date(cpn.startDate).toLocaleDateString() : 'Immediate'}</div>
+                          <div style={{ color: isExpired ? '#ef4444' : 'var(--text-secondary)' }}>
+                            To: {cpn.expiryDate ? new Date(cpn.expiryDate).toLocaleDateString() : 'Never'}
+                            {isExpired && <span style={{ marginLeft: '0.3rem', color: '#ef4444', fontWeight: '700' }}>(Expired)</span>}
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem' }}>
+                          {cpn.active && !isExpired && !isLimitReached ? (
+                            <span className="badge badge-green">Active</span>
+                          ) : isExpired ? (
+                            <span className="badge badge-red">Expired</span>
+                          ) : isLimitReached ? (
+                            <span className="badge badge-yellow">Exhausted</span>
+                          ) : (
+                            <span className="badge badge-red">Inactive</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => handleToggleCoupon(cpn.id)}
+                              style={{
+                                background: cpn.active ? 'rgba(245,158,11,0.15)' : 'rgba(34,197,94,0.15)',
+                                border: cpn.active ? '1px solid var(--warning)' : '1px solid var(--success)',
+                                color: cpn.active ? '#fde047' : '#86efac',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              {cpn.active ? 'Disable' : 'Enable'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCoupon(cpn.id)}
+                              style={{
+                                background: 'rgba(220,38,38,0.15)',
+                                border: '1px solid var(--error)',
+                                color: '#fca5a5',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Coupon Usage Audit Ledger */}
+          <div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff', marginBottom: '1rem' }}>
+              📜 Coupon Redemption Ledger &amp; Audit Trail
+            </h3>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '0.9rem 1rem' }}>Redemption ID</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Customer</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Order Ref</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Coupon Code</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Cart Amount</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Discount Given</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Final Paid</th>
+                    <th style={{ padding: '0.9rem 1rem' }}>Redeemed At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {couponUsages.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        No coupon redemptions recorded yet. Redemptions appear here upon checkout.
+                      </td>
+                    </tr>
+                  ) : (
+                    couponUsages.map((usage) => (
+                      <tr key={usage.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td style={{ padding: '0.9rem 1rem', color: 'var(--text-muted)' }}>#{usage.id}</td>
+                        <td style={{ padding: '0.9rem 1rem', fontWeight: '600', color: '#fff' }}>{usage.customerUsername || 'Customer'}</td>
+                        <td style={{ padding: '0.9rem 1rem', color: 'var(--gold)' }}>Order #{usage.orderId}</td>
+                        <td style={{ padding: '0.9rem 1rem' }}>
+                          <span style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid var(--gold)', color: 'var(--gold)', padding: '0.2rem 0.5rem', borderRadius: '6px', fontWeight: '700', fontSize: '0.8rem' }}>
+                            {usage.couponCode}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.9rem 1rem' }}>₹{Number(usage.cartAmount || 0).toLocaleString()}</td>
+                        <td style={{ padding: '0.9rem 1rem', color: '#22c55e', fontWeight: '700' }}>
+                          -₹{Number(usage.discountAmount || 0).toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.9rem 1rem', fontWeight: '700', color: 'var(--gold)' }}>
+                          ₹{Number(usage.finalAmount || 0).toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.9rem 1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                          {usage.usedAt ? new Date(usage.usedAt).toLocaleString() : 'N/A'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE COUPON MODAL */}
+      {showCouponModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 1100,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '1.5rem'
+          }}
+          onClick={() => setShowCouponModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-focus)',
+              borderRadius: 'var(--radius-card)',
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2rem',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--gold)', margin: 0 }}>
+                🎟️ Create New Promotion / Coupon
+              </h2>
+              <button
+                onClick={() => setShowCouponModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.4rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {couponFormError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                ⚠️ {couponFormError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCoupon}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '600' }}>
+                  Coupon Code *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. SAVE20, FESTIVE500"
+                  value={couponForm.code}
+                  onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '600' }}>
+                    Discount Type *
+                  </label>
+                  <select
+                    value={couponForm.discountType}
+                    onChange={(e) => setCouponForm({ ...couponForm, discountType: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem' }}
+                  >
+                    <option value="PERCENTAGE">Percentage (%)</option>
+                    <option value="FLAT_AMOUNT">Flat Amount (₹)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '600' }}>
+                    Discount Value *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    placeholder={couponForm.discountType === 'PERCENTAGE' ? 'e.g. 20' : 'e.g. 200'}
+                    value={couponForm.discountValue}
+                    onChange={(e) => setCouponForm({ ...couponForm, discountValue: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                    Min Order Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 1000 (Optional)"
+                    value={couponForm.minOrderAmount}
+                    onChange={(e) => setCouponForm({ ...couponForm, minOrderAmount: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                    Max Discount Cap (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 500 (Optional)"
+                    value={couponForm.maxDiscountAmount}
+                    onChange={(e) => setCouponForm({ ...couponForm, maxDiscountAmount: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                  Usage Limit (Total redemptions allowed)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 100 (Leave empty for unlimited)"
+                  value={couponForm.usageLimit}
+                  onChange={(e) => setCouponForm({ ...couponForm, usageLimit: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={couponForm.startDate}
+                    onChange={(e) => setCouponForm({ ...couponForm, startDate: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                    Expiry Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={couponForm.expiryDate}
+                    onChange={(e) => setCouponForm({ ...couponForm, expiryDate: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '0.85rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="couponActiveToggle"
+                  checked={couponForm.active}
+                  onChange={(e) => setCouponForm({ ...couponForm, active: e.target.checked })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label htmlFor="couponActiveToggle" style={{ fontSize: '0.9rem', color: '#fff', cursor: 'pointer' }}>
+                  Activate immediately upon creation
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCouponModal(false)}
+                  style={{ padding: '0.65rem 1.25rem', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 'var(--radius-btn)', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCoupon}
+                  style={{ padding: '0.65rem 1.5rem', background: 'var(--gold)', border: 'none', color: '#000', fontWeight: '800', borderRadius: 'var(--radius-btn)', cursor: 'pointer' }}
+                >
+                  {savingCoupon ? 'Creating...' : 'Create Coupon'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* TAB 11: WAREHOUSE & LOGISTICS MANAGEMENT */}
+      {activeAdminTab === 'warehouse' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Header Action Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '1.25rem 1.5rem', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)' }}>
+            <div>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '800' }}>🏭 Warehouse &amp; Fulfillment Operations</h3>
+              <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Monitor inventory distribution, assign staff, and track multi-facility fulfillment analytics.</p>
+            </div>
+            <button
+              onClick={() => setShowAddWarehouseForm(true)}
+              style={{ padding: '0.65rem 1.25rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 'var(--radius-btn)', fontWeight: '800', cursor: 'pointer' }}
+            >
+              + Create Warehouse
+            </button>
+          </div>
+
+          {/* Analytics Summary Grid */}
+          <div className="dashboard-grid">
+            <div className="info-card">
+              <div className="card-icon icon-purple">🏭</div>
+              <div className="card-label">Active Facilities</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800' }}>{warehouseAnalytics?.totalWarehouses || warehouses.length}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Fulfillment Centers</div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-blue">📦</div>
+              <div className="card-label">Total Stock Quantity</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800', color: '#60a5fa' }}>{warehouseAnalytics?.totalStockUnits?.toLocaleString() || 0}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Across all Warehouses</div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-green">📋</div>
+              <div className="card-label">Allocated Orders</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--gold)' }}>{warehouseAnalytics?.allocatedOrders || 0}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Awaiting Pick/Pack</div>
+            </div>
+
+            <div className="info-card">
+              <div className="card-icon icon-orange">⚠️</div>
+              <div className="card-label">Low Stock Alerts</div>
+              <div className="card-value" style={{ fontSize: '1.6rem', fontWeight: '800', color: '#f87171' }}>{warehouseAnalytics?.lowStockItems || 0}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Stock &lt; 10 units</div>
+            </div>
+          </div>
+
+          {/* Create Warehouse Modal / Form */}
+          {showAddWarehouseForm && (
+            <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: 'var(--radius-card)', border: '1px solid var(--gold)' }}>
+              <h4 style={{ margin: '0 0 1rem', color: 'var(--gold)' }}>➕ Add New Warehouse Facility</h4>
+              <form onSubmit={handleCreateWarehouse} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Warehouse Name</label>
+                  <input required placeholder="e.g. Mumbai North Hub" value={newWhForm.name} onChange={e => setNewWhForm({...newWhForm, name: e.target.value})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Code (Unique)</label>
+                  <input required placeholder="e.g. WH-MUM-01" value={newWhForm.code} onChange={e => setNewWhForm({...newWhForm, code: e.target.value})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>City</label>
+                  <input required placeholder="e.g. Mumbai" value={newWhForm.locationCity} onChange={e => setNewWhForm({...newWhForm, locationCity: e.target.value})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Address</label>
+                  <input placeholder="Street / Logistics Park" value={newWhForm.address} onChange={e => setNewWhForm({...newWhForm, address: e.target.value})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Max Capacity</label>
+                  <input type="number" value={newWhForm.capacity} onChange={e => setNewWhForm({...newWhForm, capacity: Number(e.target.value)})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Contact Phone</label>
+                  <input placeholder="+91 9876543210" value={newWhForm.contactNumber} onChange={e => setNewWhForm({...newWhForm, contactNumber: e.target.value})} style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button type="button" onClick={() => setShowAddWarehouseForm(false)} style={{ padding: '0.5rem 1rem', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" disabled={savingWh} style={{ padding: '0.5rem 1.25rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer' }}>{savingWh ? 'Saving...' : 'Save Warehouse'}</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Facilities List & Inventory Explorer */}
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>🏢 Managed Warehouse Facilities</h4>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Click "View Inventory" to inspect stock allocation</span>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', textAlign: 'left' }}>
+                  <th style={{ padding: '0.75rem 1.25rem' }}>Code</th>
+                  <th style={{ padding: '0.75rem 1.25rem' }}>Facility Name</th>
+                  <th style={{ padding: '0.75rem 1.25rem' }}>Location</th>
+                  <th style={{ padding: '0.75rem 1.25rem' }}>Assigned Staff</th>
+                  <th style={{ padding: '0.75rem 1.25rem' }}>Capacity</th>
+                  <th style={{ padding: '0.75rem 1.25rem', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {warehouses.map(wh => {
+                  const staffForWh = warehouseStaff.filter(s => s.assignedWarehouseId === wh.id)
+                  return (
+                    <tr key={wh.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '0.85rem 1.25rem', fontWeight: '700', color: 'var(--gold)' }}>{wh.code}</td>
+                      <td style={{ padding: '0.85rem 1.25rem', color: '#fff', fontWeight: '600' }}>{wh.name}</td>
+                      <td style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)' }}>📍 {wh.locationCity}</td>
+                      <td style={{ padding: '0.85rem 1.25rem' }}>
+                        {staffForWh.length > 0 ? (
+                          staffForWh.map(s => <span key={s.id} className="badge badge-purple" style={{ marginRight: '0.25rem' }}>{s.name}</span>)
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Unassigned</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)' }}>{wh.capacity?.toLocaleString()} units</td>
+                      <td style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>
+                        <button
+                          onClick={() => loadWhInventory(wh.id)}
+                          style={{ padding: '0.4rem 0.85rem', background: selectedWhInventory === wh.id ? 'var(--gold)' : 'var(--bg-secondary)', color: selectedWhInventory === wh.id ? '#000' : 'var(--gold)', border: '1px solid var(--gold)', borderRadius: '6px', fontWeight: '700', cursor: 'pointer', fontSize: '0.8rem' }}
+                        >
+                          {selectedWhInventory === wh.id ? 'Viewing Inventory' : 'View Inventory'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Selected Facility Stock Inventory Breakdown */}
+          {selectedWhInventory && (
+            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: '1.25rem 1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div>
+                  <h4 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.1rem' }}>
+                    📦 Stock Inventory for {warehouses.find(w => w.id === selectedWhInventory)?.name || `Warehouse #${selectedWhInventory}`}
+                  </h4>
+                  <p style={{ margin: '0.2rem 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Inspect available units or add product inventory to this facility.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setShowAdminInwardModal(true)}
+                    style={{ padding: '0.5rem 1rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    + Add Product Stock
+                  </button>
+                  <button onClick={() => { setSelectedWhInventory(null); setShowAdminInwardModal(false); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem' }}>✖</button>
+                </div>
+              </div>
+
+              {/* Admin Stock Inward Form */}
+              {showAdminInwardModal && (
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--gold)', marginBottom: '1.25rem' }}>
+                  <h5 style={{ margin: '0 0 0.75rem', color: 'var(--gold)', fontSize: '0.95rem' }}>📥 Inward Product Stock to Facility</h5>
+                  <form onSubmit={handleAdminInwardStock} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Select Product</label>
+                      <select
+                        required
+                        value={adminInwardForm.productId}
+                        onChange={e => setAdminInwardForm({ ...adminInwardForm, productId: e.target.value })}
+                        style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      >
+                        <option value="">-- Choose Product from Catalog --</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.title} ({p.sku || `ID #${p.id}`})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Quantity to Add</label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        value={adminInwardForm.quantity}
+                        onChange={e => setAdminInwardForm({ ...adminInwardForm, quantity: e.target.value })}
+                        style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Aisle / Bin Location</label>
+                      <input
+                        placeholder="e.g. Aisle A-01"
+                        value={adminInwardForm.aisleBin}
+                        onChange={e => setAdminInwardForm({ ...adminInwardForm, aisleBin: e.target.value })}
+                        style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Movement Note</label>
+                      <input
+                        placeholder="e.g. Stock replenishment batch #1"
+                        value={adminInwardForm.note}
+                        onChange={e => setAdminInwardForm({ ...adminInwardForm, note: e.target.value })}
+                        style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.4rem' }}>
+                      <button type="button" onClick={() => setShowAdminInwardModal(false)} style={{ padding: '0.45rem 0.85rem', background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}>Cancel</button>
+                      <button type="submit" disabled={adminInwardLoading} style={{ padding: '0.45rem 1.1rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        {adminInwardLoading ? 'Adding...' : 'Add Stock Now'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {whLoading ? (
+                <p style={{ color: 'var(--text-muted)' }}>Loading inventory...</p>
+              ) : whInventory.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <p style={{ margin: '0 0 0.5rem' }}>No stock registered in this warehouse facility yet.</p>
+                  <button onClick={() => setShowAdminInwardModal(true)} style={{ padding: '0.5rem 1rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer' }}>+ Add First Product Stock</button>
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', textAlign: 'left' }}>
+                      <th style={{ padding: '0.6rem 1rem' }}>Product</th>
+                      <th style={{ padding: '0.6rem 1rem' }}>Physical Quantity</th>
+                      <th style={{ padding: '0.6rem 1rem' }}>Reserved</th>
+                      <th style={{ padding: '0.6rem 1rem' }}>Available</th>
+                      <th style={{ padding: '0.6rem 1rem' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {whInventory.map(item => {
+                      const available = (item.quantity || 0) - (item.reservedQuantity || 0)
+                      return (
+                        <tr key={item.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <td style={{ padding: '0.6rem 1rem', color: '#fff', fontWeight: '600' }}>{item.productName || `Product #${item.productId}`}</td>
+                          <td style={{ padding: '0.6rem 1rem', color: '#fff' }}>{item.quantity}</td>
+                          <td style={{ padding: '0.6rem 1rem', color: 'var(--gold)' }}>{item.reservedQuantity || 0}</td>
+                          <td style={{ padding: '0.6rem 1rem', fontWeight: '700', color: available > 5 ? '#4ade80' : '#f87171' }}>{available}</td>
+                          <td style={{ padding: '0.6rem 1rem' }}>
+                            {available > 5 ? <span className="badge badge-green">In Stock</span> : <span className="badge badge-red">Low Stock</span>}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {/* Staff Assignment Panel */}
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: '1.25rem 1.5rem' }}>
+            <h4 style={{ margin: '0 0 1rem', color: '#fff' }}>👥 Warehouse Staff Role Assignments</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+              {warehouseStaff.map(staff => (
+                <div key={staff.id} style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: '700' }}>{staff.name}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{staff.email}</div>
+                    <div style={{ color: 'var(--gold)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                      Assigned: {staff.assignedWarehouseId ? warehouses.find(w => w.id === staff.assignedWarehouseId)?.name || `WH #${staff.assignedWarehouseId}` : 'Unassigned'}
+                    </div>
+                  </div>
+                  <select
+                    value={staff.assignedWarehouseId || ''}
+                    onChange={(e) => handleAssignStaff(staff.id, e.target.value ? Number(e.target.value) : null)}
+                    style={{ padding: '0.4rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
+                  >
+                    <option value="">-- Unassigned --</option>
+                    {warehouses.map(w => (
+                      <option key={w.id} value={w.id}>{w.code} - {w.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

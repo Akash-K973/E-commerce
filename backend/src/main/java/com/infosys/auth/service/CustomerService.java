@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -21,15 +22,21 @@ public class CustomerService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final CommissionService commissionService;
+    private final CouponService couponService;
+    private final WarehouseService warehouseService;
 
     public CustomerService(CartItemRepository cartItemRepository,
                            OrderRepository orderRepository,
                            ProductRepository productRepository,
-                           CommissionService commissionService) {
+                           CommissionService commissionService,
+                           CouponService couponService,
+                           WarehouseService warehouseService) {
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.commissionService = commissionService;
+        this.couponService = couponService;
+        this.warehouseService = warehouseService;
     }
 
     public List<CartItem> getCart(Long userId) {
@@ -81,6 +88,11 @@ public class CustomerService {
 
     @Transactional
     public Order checkout(Long userId, String customerName, String shippingAddress) {
+        return checkout(userId, customerName, shippingAddress, null);
+    }
+
+    @Transactional
+    public Order checkout(Long userId, String customerName, String shippingAddress, String couponCode) {
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
         if (cartItems.isEmpty()) {
             throw new RuntimeException("Cannot checkout: Cart is empty");
@@ -115,11 +127,33 @@ public class CustomerService {
             productRepository.save(product);
         }
 
-        order.setTotalAmount(total);
+        BigDecimal subtotal = total;
+        BigDecimal finalTotal = subtotal;
+
+        order.setSubtotalAmount(subtotal);
+        order.setDiscountAmount(BigDecimal.ZERO);
+
+        if (couponCode != null && !couponCode.trim().isEmpty()) {
+            Map<String, Object> couponCalc = couponService.validateAndCalculateDiscount(couponCode, subtotal);
+            BigDecimal discountAmount = (BigDecimal) couponCalc.get("discountAmount");
+            finalTotal = (BigDecimal) couponCalc.get("finalAmount");
+
+            order.setCouponCode(couponCode.trim().toUpperCase());
+            order.setDiscountAmount(discountAmount);
+        }
+
+        order.setTotalAmount(finalTotal);
         Order savedOrder = orderRepository.save(order);
 
         // Clear user cart
         cartItemRepository.deleteAll(cartItems);
+
+        // Auto allocate warehouse
+        try {
+            savedOrder = warehouseService.allocateOrderToWarehouse(savedOrder);
+        } catch (Exception e) {
+            System.err.println("Error auto allocating warehouse in direct checkout: " + e.getMessage());
+        }
 
         // Generate vendor commission records
         try {
@@ -128,7 +162,59 @@ public class CustomerService {
             System.err.println("Error creating vendor commission for checkout order #" + savedOrder.getId() + ": " + e.getMessage());
         }
 
+        // Record coupon usage tracking
+        if (savedOrder.getCouponCode() != null && !savedOrder.getCouponCode().trim().isEmpty()) {
+            try {
+                couponService.recordCouponUsage(
+                        savedOrder.getCouponCode(),
+                        savedOrder.getUserId(),
+                        savedOrder.getCustomerName(),
+                        savedOrder.getId(),
+                        savedOrder.getSubtotalAmount() != null ? savedOrder.getSubtotalAmount() : savedOrder.getTotalAmount(),
+                        savedOrder.getDiscountAmount() != null ? savedOrder.getDiscountAmount() : BigDecimal.ZERO,
+                        savedOrder.getTotalAmount()
+                );
+            } catch (Exception e) {
+                System.err.println("Error recording coupon usage for checkout order #" + savedOrder.getId() + ": " + e.getMessage());
+            }
+        }
+
         return savedOrder;
+    }
+
+    @Transactional
+    public Order cancelOrder(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: Cannot cancel another user's order");
+        }
+
+        if (order.getStatus() == Order.OrderStatus.SHIPPED || order.getStatus() == Order.OrderStatus.DELIVERED) {
+            throw new RuntimeException("Cannot cancel order that has already been shipped or delivered. Please request a return instead.");
+        }
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new RuntimeException("Order is already cancelled");
+        }
+
+        order.setStatus(Order.OrderStatus.CANCELLED);
+
+        // Restore product stock
+        for (OrderItem item : order.getItems()) {
+            if (item.getProductId() != null) {
+                productRepository.findById(item.getProductId()).ifPresent(p -> {
+                    p.setStockQuantity((p.getStockQuantity() != null ? p.getStockQuantity() : 0) + item.getQuantity());
+                    productRepository.save(p);
+                });
+            }
+        }
+
+        // Release warehouse reservation
+        warehouseService.deallocateCancelledOrder(order);
+
+        return orderRepository.save(order);
     }
 
     public List<Order> getCustomerOrders(Long userId) {

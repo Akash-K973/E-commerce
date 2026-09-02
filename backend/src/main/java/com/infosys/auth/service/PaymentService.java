@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PaymentService {
@@ -37,15 +38,21 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final CommissionService commissionService;
+    private final CouponService couponService;
+    private final WarehouseService warehouseService;
 
     public PaymentService(CartItemRepository cartItemRepository,
                           OrderRepository orderRepository,
                           ProductRepository productRepository,
-                          CommissionService commissionService) {
+                          CommissionService commissionService,
+                          CouponService couponService,
+                          WarehouseService warehouseService) {
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.commissionService = commissionService;
+        this.couponService = couponService;
+        this.warehouseService = warehouseService;
     }
 
     public String getKeyId() {
@@ -92,10 +99,25 @@ public class PaymentService {
             order.getItems().add(orderItem);
         }
 
-        order.setTotalAmount(total);
+        BigDecimal subtotal = total;
+        BigDecimal finalTotal = subtotal;
+
+        order.setSubtotalAmount(subtotal);
+        order.setDiscountAmount(BigDecimal.ZERO);
+
+        if (request.getCouponCode() != null && !request.getCouponCode().trim().isEmpty()) {
+            Map<String, Object> couponCalc = couponService.validateAndCalculateDiscount(request.getCouponCode(), subtotal);
+            BigDecimal discountAmount = (BigDecimal) couponCalc.get("discountAmount");
+            finalTotal = (BigDecimal) couponCalc.get("finalAmount");
+
+            order.setCouponCode(request.getCouponCode().trim().toUpperCase());
+            order.setDiscountAmount(discountAmount);
+        }
+
+        order.setTotalAmount(finalTotal);
 
         // Calculate amount in paise (1 INR = 100 Paise)
-        long amountInPaise = total.multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+        long amountInPaise = finalTotal.multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP).longValue();
         if (amountInPaise <= 0) {
             amountInPaise = 100;
         }
@@ -186,6 +208,30 @@ public class PaymentService {
             commissionService.createCommissionsForOrder(savedOrder);
         } catch (Exception e) {
             System.err.println("Error creating vendor commission for order #" + savedOrder.getId() + ": " + e.getMessage());
+        }
+
+        // Record coupon usage tracking
+        if (savedOrder.getCouponCode() != null && !savedOrder.getCouponCode().trim().isEmpty()) {
+            try {
+                couponService.recordCouponUsage(
+                        savedOrder.getCouponCode(),
+                        savedOrder.getUserId(),
+                        savedOrder.getCustomerName(),
+                        savedOrder.getId(),
+                        savedOrder.getSubtotalAmount() != null ? savedOrder.getSubtotalAmount() : savedOrder.getTotalAmount(),
+                        savedOrder.getDiscountAmount() != null ? savedOrder.getDiscountAmount() : BigDecimal.ZERO,
+                        savedOrder.getTotalAmount()
+                );
+            } catch (Exception e) {
+                System.err.println("Error recording coupon usage for order #" + savedOrder.getId() + ": " + e.getMessage());
+            }
+        }
+
+        // Automatically allocate order to suitable warehouse with available stock
+        try {
+            savedOrder = warehouseService.allocateOrderToWarehouse(savedOrder);
+        } catch (Exception e) {
+            System.err.println("Error in auto warehouse allocation for order #" + savedOrder.getId() + ": " + e.getMessage());
         }
 
         return savedOrder;

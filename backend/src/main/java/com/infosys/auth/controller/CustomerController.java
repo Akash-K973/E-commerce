@@ -52,11 +52,23 @@ public class CustomerController {
         Long userId = Long.valueOf(payload.get("userId").toString());
         String customerName = payload.getOrDefault("customerName", "Customer").toString();
         String shippingAddress = payload.getOrDefault("shippingAddress", "Standard Delivery Address").toString();
-        return ResponseEntity.ok(customerService.checkout(userId, customerName, shippingAddress));
+        String couponCode = payload.containsKey("couponCode") && payload.get("couponCode") != null ? payload.get("couponCode").toString() : null;
+        return ResponseEntity.ok(customerService.checkout(userId, customerName, shippingAddress, couponCode));
     }
 
     @GetMapping("/orders/{userId}")
     public ResponseEntity<List<Order>> getCustomerOrders(@PathVariable Long userId) {
         return ResponseEntity.ok(customerService.getCustomerOrders(userId));
+    }
+
+    @PutMapping("/orders/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId, @RequestBody Map<String, Object> payload) {
+        try {
+            Long userId = Long.valueOf(payload.get("userId").toString());
+            Order cancelledOrder = customerService.cancelOrder(orderId, userId);
+            return ResponseEntity.ok(cancelledOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

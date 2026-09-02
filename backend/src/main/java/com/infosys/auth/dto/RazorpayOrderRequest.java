@@ -4,6 +4,7 @@ public class RazorpayOrderRequest {
     private Long userId;
     private String customerName;
     private String shippingAddress;
+    private String couponCode;
 
     public RazorpayOrderRequest() {}
 
@@ -11,6 +12,13 @@ public class RazorpayOrderRequest {
         this.userId = userId;
         this.customerName = customerName;
         this.shippingAddress = shippingAddress;
+    }
+
+    public RazorpayOrderRequest(Long userId, String customerName, String shippingAddress, String couponCode) {
+        this.userId = userId;
+        this.customerName = customerName;
+        this.shippingAddress = shippingAddress;
+        this.couponCode = couponCode;
     }
 
     public Long getUserId() {
@@ -35,5 +43,13 @@ public class RazorpayOrderRequest {
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
     }
 }

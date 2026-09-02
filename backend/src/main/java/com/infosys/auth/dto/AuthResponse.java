@@ -9,6 +9,8 @@ public class AuthResponse {
     private String email;
     private String role;
     private String message;
+    private Long assignedWarehouseId;
+    private String assignedWarehouseName;
 
     public AuthResponse() {
     }
@@ -88,6 +90,22 @@ public class AuthResponse {
         this.message = message;
     }
 
+    public Long getAssignedWarehouseId() {
+        return assignedWarehouseId;
+    }
+
+    public void setAssignedWarehouseId(Long assignedWarehouseId) {
+        this.assignedWarehouseId = assignedWarehouseId;
+    }
+
+    public String getAssignedWarehouseName() {
+        return assignedWarehouseName;
+    }
+
+    public void setAssignedWarehouseName(String assignedWarehouseName) {
+        this.assignedWarehouseName = assignedWarehouseName;
+    }
+
     // Builder implementation
     public static Builder builder() {
         return new Builder();
@@ -101,6 +119,8 @@ public class AuthResponse {
         private String email;
         private String role;
         private String message;
+        private Long assignedWarehouseId;
+        private String assignedWarehouseName;
 
         public Builder token(String token) {
             this.token = token;
@@ -137,8 +157,21 @@ public class AuthResponse {
             return this;
         }
 
+        public Builder assignedWarehouseId(Long assignedWarehouseId) {
+            this.assignedWarehouseId = assignedWarehouseId;
+            return this;
+        }
+
+        public Builder assignedWarehouseName(String assignedWarehouseName) {
+            this.assignedWarehouseName = assignedWarehouseName;
+            return this;
+        }
+
         public AuthResponse build() {
-            return new AuthResponse(token, type, id, username, email, role, message);
+            AuthResponse res = new AuthResponse(token, type, id, username, email, role, message);
+            res.setAssignedWarehouseId(assignedWarehouseId);
+            res.setAssignedWarehouseName(assignedWarehouseName);
+            return res;
         }
     }
 }

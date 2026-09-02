@@ -99,6 +99,8 @@ public class AuthService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .assignedWarehouseId(user.getAssignedWarehouseId())
+                .assignedWarehouseName(user.getAssignedWarehouseName())
                 .build();
     }
 

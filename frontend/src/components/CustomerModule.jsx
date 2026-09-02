@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import CustomerService from '../services/CustomerService'
 import AuthService from '../services/AuthService'
 import PaymentService from '../services/PaymentService'
+import CouponService from '../services/CouponService'
 
 export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated, showOrderHistory = true }) {
   const user = AuthService.getCurrentUser()
@@ -22,6 +23,12 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
     order: null,
     errorMessage: ''
   })
+
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('')
+  const [couponApplied, setCouponApplied] = useState(null)
+  const [couponError, setCouponError] = useState('')
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
 
   const fetchCart = async () => {
     if (!user?.id) return
@@ -110,6 +117,38 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
     }
   }
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code')
+      return
+    }
+    setApplyingCoupon(true)
+    setCouponError('')
+    setCouponApplied(null)
+    try {
+      const result = await CouponService.applyCoupon(couponCode.trim(), calculateSubtotal())
+      if (result.valid) {
+        setCouponApplied(result)
+        setCouponError('')
+      } else {
+        setCouponError(result.message || 'Invalid coupon')
+        setCouponApplied(null)
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to apply coupon'
+      setCouponError(msg)
+      setCouponApplied(null)
+    } finally {
+      setApplyingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('')
+    setCouponApplied(null)
+    setCouponError('')
+  }
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault()
     if (!user?.id) return
@@ -120,11 +159,12 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
 
     setPlacingOrder(true)
     try {
-      // 1. Create Razorpay Test Order on Backend
+      // 1. Create Razorpay Test Order on Backend (with optional coupon)
       const orderResp = await PaymentService.createRazorpayOrder(
         user.id,
         user.fullName || user.username || 'Customer',
-        shippingAddress
+        shippingAddress,
+        couponApplied ? couponCode.trim() : null
       )
 
       const { razorpayOrderId, razorpayKeyId, orderId, amount, currency } = orderResp || {}
@@ -430,14 +470,67 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
                 />
               </div>
 
+              {/* Coupon Code Section */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  🎟️ Have a Coupon Code?
+                </label>
+                {!couponApplied ? (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. SAVE20, FLAT200"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError('') }}
+                      style={{ ...inputStyle, flex: 1, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={applyingCoupon}
+                      style={{ padding: '0.5rem 1rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 'var(--radius-btn)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {applyingCoupon ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid #22c55e', borderRadius: '8px', padding: '0.6rem 0.8rem' }}>
+                    <div>
+                      <span style={{ color: '#22c55e', fontWeight: '700', fontSize: '0.9rem' }}>✅ {couponApplied.couponCode}</span>
+                      <span style={{ color: '#86efac', fontSize: '0.8rem', marginLeft: '0.5rem' }}>-₹{Number(couponApplied.discountAmount).toLocaleString()} off</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {couponError && (
+                  <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: '500' }}>⚠️ {couponError}</div>
+                )}
+              </div>
+
               <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
                   <span>Total Items:</span>
                   <strong style={{ color: '#fff' }}>{cartItems.reduce((a, b) => a + b.quantity, 0)}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                  <span>Subtotal:</span>
+                  <span style={{ color: '#fff' }}>₹{calculateSubtotal().toLocaleString()}</span>
+                </div>
+                {couponApplied && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#22c55e', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                    <span>Coupon Discount ({couponApplied.couponCode}):</span>
+                    <span>-₹{Number(couponApplied.discountAmount).toLocaleString()}</span>
+                  </div>
+                )}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800' }}>
                   <span>Total Payable:</span>
-                  <span style={{ color: 'var(--gold)' }}>${calculateSubtotal().toLocaleString()}</span>
+                  <span style={{ color: 'var(--gold)' }}>₹{couponApplied ? Number(couponApplied.finalAmount).toLocaleString() : calculateSubtotal().toLocaleString()}</span>
                 </div>
               </div>
 

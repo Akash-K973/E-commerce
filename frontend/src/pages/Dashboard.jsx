@@ -4,6 +4,7 @@ import ProductCatalog from '../components/ProductCatalog'
 import CustomerModule from '../components/CustomerModule'
 import VendorModule from '../components/VendorModule'
 import AdminModule from '../components/AdminModule'
+import WarehouseStaffModule from '../components/WarehouseStaffModule'
 import CustomerService from '../services/CustomerService'
 import AuthService from '../services/AuthService'
 
@@ -16,10 +17,12 @@ export default function Dashboard() {
 
   const getInitialTab = () => {
     const path = location.pathname.toLowerCase()
+    // Warehouse Staff always land on warehouse portal
+    if (role === 'WAREHOUSE_STAFF') return 'warehouse'
     if (path.includes('/admin') && role === 'ADMIN') return 'admin'
     if (path.includes('/vendor') && (role === 'VENDOR' || role === 'ADMIN')) return 'vendor'
     if (path.includes('/customer')) return 'customer'
-    if (role === 'ADMIN' && path.includes('/admin')) return 'admin'
+    if (path.includes('/warehouse') && (role === 'ADMIN' || role === 'WAREHOUSE_STAFF')) return 'warehouse'
     return 'store'
   }
 
@@ -72,6 +75,10 @@ export default function Dashboard() {
 
         {activeTab === 'vendor' && (
           <VendorModule />
+        )}
+
+        {activeTab === 'warehouse' && (
+          <WarehouseStaffModule />
         )}
 
         {activeTab === 'admin' && (

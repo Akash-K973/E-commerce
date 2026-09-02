@@ -1,8 +1,10 @@
 package com.infosys.auth.config;
 
+import com.infosys.auth.model.Coupon;
 import com.infosys.auth.model.Product;
 import com.infosys.auth.model.User;
 import com.infosys.auth.model.VendorProfile;
+import com.infosys.auth.repository.CouponRepository;
 import com.infosys.auth.repository.ProductRepository;
 import com.infosys.auth.repository.UserRepository;
 import com.infosys.auth.repository.VendorProfileRepository;
@@ -12,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -19,17 +22,20 @@ public class DataInitializer implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final VendorProfileRepository vendorProfileRepository;
+    private final CouponRepository couponRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
     public DataInitializer(ProductRepository productRepository,
                            UserRepository userRepository,
                            VendorProfileRepository vendorProfileRepository,
+                           CouponRepository couponRepository,
                            PasswordEncoder passwordEncoder,
                            JdbcTemplate jdbcTemplate) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.vendorProfileRepository = vendorProfileRepository;
+        this.couponRepository = couponRepository;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -94,6 +100,20 @@ public class DataInitializer implements CommandLineRunner {
                     .fullName("Alexander Wright")
                     .build();
             userRepository.save(customer);
+        }
+
+        // Seed default Warehouse Staff if not exists
+        if (!userRepository.existsByEmail("staff@shopnova.com")) {
+            User staff = User.builder()
+                    .username("staff")
+                    .email("staff@shopnova.com")
+                    .password(passwordEncoder.encode("staff123"))
+                    .role(User.Role.WAREHOUSE_STAFF)
+                    .fullName("Rajesh Kumar (BLR Logistics)")
+                    .build();
+            staff.setAssignedWarehouseId(1L);
+            staff.setAssignedWarehouseName("Bangalore Central Hub");
+            userRepository.save(staff);
         }
 
         // Seed initial Products if empty
@@ -180,5 +200,58 @@ public class DataInitializer implements CommandLineRunner {
                     true
             ));
         }
+
+        // Seed sample coupons
+        seedCoupons();
+    }
+
+    private void seedCoupons() {
+        if (couponRepository.count() > 0) {
+            return;
+        }
+
+        Coupon save20 = new Coupon();
+        save20.setCode("SAVE20");
+        save20.setDescription("Get 20% off on orders above ₹1,000");
+        save20.setDiscountType("PERCENTAGE");
+        save20.setDiscountValue(new BigDecimal("20"));
+        save20.setMinOrderAmount(new BigDecimal("1000"));
+        save20.setMaxDiscountAmount(new BigDecimal("500"));
+        save20.setStartDate(LocalDateTime.now().minusDays(1));
+        save20.setExpiryDate(LocalDateTime.of(2026, 8, 30, 23, 59, 59));
+        save20.setUsageLimit(100);
+        save20.setUsedCount(0);
+        save20.setActive(true);
+        couponRepository.save(save20);
+
+        Coupon flat200 = new Coupon();
+        flat200.setCode("FLAT200");
+        flat200.setDescription("Flat ₹200 off on orders above ₹1,500");
+        flat200.setDiscountType("FLAT_AMOUNT");
+        flat200.setDiscountValue(new BigDecimal("200"));
+        flat200.setMinOrderAmount(new BigDecimal("1500"));
+        flat200.setMaxDiscountAmount(null);
+        flat200.setStartDate(LocalDateTime.now().minusDays(1));
+        flat200.setExpiryDate(LocalDateTime.of(2026, 12, 31, 23, 59, 59));
+        flat200.setUsageLimit(50);
+        flat200.setUsedCount(0);
+        flat200.setActive(true);
+        couponRepository.save(flat200);
+
+        Coupon welcome10 = new Coupon();
+        welcome10.setCode("WELCOME10");
+        welcome10.setDescription("Welcome offer: 10% off for new customers");
+        welcome10.setDiscountType("PERCENTAGE");
+        welcome10.setDiscountValue(new BigDecimal("10"));
+        welcome10.setMinOrderAmount(BigDecimal.ZERO);
+        welcome10.setMaxDiscountAmount(new BigDecimal("250"));
+        welcome10.setStartDate(LocalDateTime.now().minusDays(7));
+        welcome10.setExpiryDate(LocalDateTime.of(2027, 1, 1, 0, 0, 0));
+        welcome10.setUsageLimit(500);
+        welcome10.setUsedCount(0);
+        welcome10.setActive(true);
+        couponRepository.save(welcome10);
+
+        System.out.println("Seeded 3 sample coupons: SAVE20, FLAT200, WELCOME10");
     }
 }

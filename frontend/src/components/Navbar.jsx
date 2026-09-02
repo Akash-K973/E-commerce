@@ -60,6 +60,17 @@ export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActive
           </button>
         )}
 
+        {(role === 'WAREHOUSE_STAFF' || role === 'ADMIN') && (
+          <button
+            id="nav-warehouse"
+            className={`btn-nav ${activeTab === 'warehouse' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('warehouse'); navigate('/dashboard'); }}
+            style={activeTab === 'warehouse' ? activeNavStyle : navStyle}
+          >
+            🏭 Warehouse
+          </button>
+        )}
+
         {role === 'ADMIN' && (
           <button
             className={`btn-nav ${activeTab === 'admin' ? 'active' : ''}`}

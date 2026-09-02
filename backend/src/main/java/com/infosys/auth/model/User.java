@@ -42,13 +42,19 @@ public class User {
 
     private String location;
 
+    @Column(name = "assigned_warehouse_id")
+    private Long assignedWarehouseId;
+
+    @Column(name = "assigned_warehouse_name")
+    private String assignedWarehouseName;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
     public enum Role {
-        USER, CUSTOMER, VENDOR, ADMIN
+        USER, CUSTOMER, VENDOR, ADMIN, WAREHOUSE_STAFF
     }
 
     public User() {
@@ -145,6 +151,22 @@ public class User {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Long getAssignedWarehouseId() {
+        return assignedWarehouseId;
+    }
+
+    public void setAssignedWarehouseId(Long assignedWarehouseId) {
+        this.assignedWarehouseId = assignedWarehouseId;
+    }
+
+    public String getAssignedWarehouseName() {
+        return assignedWarehouseName;
+    }
+
+    public void setAssignedWarehouseName(String assignedWarehouseName) {
+        this.assignedWarehouseName = assignedWarehouseName;
     }
 
     // Builder implementation

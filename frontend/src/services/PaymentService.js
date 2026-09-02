@@ -13,10 +13,12 @@ const PaymentService = {
     return response.data
   },
 
-  async createRazorpayOrder(userId, customerName, shippingAddress) {
+  async createRazorpayOrder(userId, customerName, shippingAddress, couponCode = null) {
+    const payload = { userId, customerName, shippingAddress }
+    if (couponCode) payload.couponCode = couponCode
     const response = await axios.post(
       `${API_URL}/create-order`,
-      { userId, customerName, shippingAddress },
+      payload,
       { headers: getHeaders() }
     )
     return response.data
