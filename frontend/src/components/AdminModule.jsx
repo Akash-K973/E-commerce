@@ -70,6 +70,11 @@ export default function AdminModule() {
   const [adminInwardForm, setAdminInwardForm] = useState({ productId: '', quantity: 100, aisleBin: 'Aisle A-01', note: 'Admin initial stock inward' })
   const [adminInwardLoading, setAdminInwardLoading] = useState(false)
 
+  // Quick Staff Assignment state
+  const [selectedUserForAssign, setSelectedUserForAssign] = useState('')
+  const [selectedWhForAssign, setSelectedWhForAssign] = useState('')
+
+
 
   // Vendor Detail Modal state
   const [selectedVendorDetails, setSelectedVendorDetails] = useState(null)
@@ -209,6 +214,15 @@ export default function AdminModule() {
       alert('Failed to inward stock: ' + (err.response?.data?.message || err.message))
     } finally { setAdminInwardLoading(false) }
   }
+
+  const handleQuickAssign = async () => {
+    if (!selectedUserForAssign) { alert('Please select a user'); return }
+    if (!selectedWhForAssign) { alert('Please select a warehouse'); return }
+    await handleAssignStaff(Number(selectedUserForAssign), Number(selectedWhForAssign))
+    setSelectedUserForAssign('')
+    setSelectedWhForAssign('')
+  }
+
 
 
 
@@ -2444,28 +2458,66 @@ export default function AdminModule() {
           {/* Staff Assignment Panel */}
           <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: '1.25rem 1.5rem' }}>
             <h4 style={{ margin: '0 0 1rem', color: '#fff' }}>👥 Warehouse Staff Role Assignments</h4>
+
+            {/* Quick Assign Bar */}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--gold)', fontWeight: '700' }}>➕ Assign User to Warehouse:</span>
+              <select
+                value={selectedUserForAssign}
+                onChange={(e) => setSelectedUserForAssign(e.target.value)}
+                style={{ flex: 1, minWidth: '200px', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+              >
+                <option value="">-- Choose Registered User --</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.username} ({u.email}) - {u.role}</option>
+                ))}
+              </select>
+
+              <select
+                value={selectedWhForAssign}
+                onChange={(e) => setSelectedWhForAssign(e.target.value)}
+                style={{ flex: 1, minWidth: '200px', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+              >
+                <option value="">-- Choose Warehouse Facility --</option>
+                {warehouses.map(w => (
+                  <option key={w.id} value={w.id}>{w.code} - {w.name} ({w.locationCity})</option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleQuickAssign}
+                style={{ padding: '0.5rem 1.25rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                Assign Staff
+              </button>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-              {warehouseStaff.map(staff => (
-                <div key={staff.id} style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: '700' }}>{staff.name}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{staff.email}</div>
-                    <div style={{ color: 'var(--gold)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                      Assigned: {staff.assignedWarehouseId ? warehouses.find(w => w.id === staff.assignedWarehouseId)?.name || `WH #${staff.assignedWarehouseId}` : 'Unassigned'}
+              {warehouseStaff.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', gridColumn: '1 / -1' }}>No warehouse staff assigned yet. Use the dropdown above to assign a user.</div>
+              ) : (
+                warehouseStaff.map(staff => (
+                  <div key={staff.id} style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: '700' }}>{staff.name}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{staff.email}</div>
+                      <div style={{ color: 'var(--gold)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        Assigned: {staff.assignedWarehouseId ? warehouses.find(w => w.id === staff.assignedWarehouseId)?.name || `WH #${staff.assignedWarehouseId}` : 'Unassigned'}
+                      </div>
                     </div>
+                    <select
+                      value={staff.assignedWarehouseId || ''}
+                      onChange={(e) => handleAssignStaff(staff.id, e.target.value ? Number(e.target.value) : null)}
+                      style={{ padding: '0.4rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
+                    >
+                      <option value="">-- Unassigned --</option>
+                      {warehouses.map(w => (
+                        <option key={w.id} value={w.id}>{w.code} - {w.name}</option>
+                      ))}
+                    </select>
                   </div>
-                  <select
-                    value={staff.assignedWarehouseId || ''}
-                    onChange={(e) => handleAssignStaff(staff.id, e.target.value ? Number(e.target.value) : null)}
-                    style={{ padding: '0.4rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
-                  >
-                    <option value="">-- Unassigned --</option>
-                    {warehouses.map(w => (
-                      <option key={w.id} value={w.id}>{w.code} - {w.name}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

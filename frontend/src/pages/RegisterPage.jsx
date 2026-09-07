@@ -110,6 +110,26 @@ export default function RegisterPage() {
 
         {/* Form */}
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          {/* Account Type / Role Selection */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="reg-role">Account Type</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔰</span>
+              <select
+                id="reg-role"
+                name="role"
+                className="form-input"
+                value={formData.role}
+                onChange={handleChange}
+                style={{ cursor: 'pointer', background: 'var(--bg-secondary)', color: '#fff' }}
+              >
+                <option value="CUSTOMER">🛒 Customer (Shopping)</option>
+                <option value="VENDOR">🏪 Vendor / Seller (Store Owner)</option>
+                <option value="WAREHOUSE_STAFF">🏭 Warehouse Staff (Logistics &amp; Fulfillment)</option>
+              </select>
+            </div>
+          </div>
+
           {/* Username */}
           <div className="form-group">
             <label className="form-label" htmlFor="reg-username">Username</label>
