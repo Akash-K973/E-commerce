@@ -49,6 +49,7 @@ export default function AdminModule() {
   const [newConfigRate, setNewConfigRate] = useState('10')
 
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [activeAdminTab, setActiveAdminTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'products' | 'analytics' | 'orders' | 'commissions' | 'coupons' | 'system' | 'reports' | 'warehouse'
 
   // Warehouse state
@@ -107,6 +108,7 @@ export default function AdminModule() {
 
   const loadAdminData = async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const [statsRes, usersRes, vendorsRes, productsRes, ordersRes, analyticsRes, commissionsRes, sysRes, reportRes] = await Promise.all([
         AdminService.getPlatformStats(),
@@ -132,7 +134,12 @@ export default function AdminModule() {
       // Load warehouse overview data in background
       loadWarehouseData().catch(e => console.warn('Warehouse data load failed:', e))
     } catch (err) {
-      console.error('Error loading admin metrics:', err)
+      const status = err.response?.status
+      if (status === 403) {
+        setLoadError('Access Denied: You do not have admin privileges to view this portal.')
+      } else {
+        setLoadError(err.response?.data?.message || err.message || 'Failed to load admin dashboard data. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -466,6 +473,15 @@ export default function AdminModule() {
   })
 
   if (loading) return <div style={{ color: 'var(--gold)', padding: '2rem', textAlign: 'center', fontSize: '1.1rem' }}>⚡ Loading Executive Control Center...</div>
+
+  if (loadError) return (
+    <div style={{ padding: '2rem' }}>
+      <div className="banner-error">
+        ⚠️ {loadError}
+        <button onClick={loadAdminData} style={{ marginLeft: '1rem', background: 'none', border: '1px solid #F87171', color: '#F87171', padding: '0.3rem 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ padding: '1.5rem 0' }}>

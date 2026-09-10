@@ -152,7 +152,7 @@ export default function RegisterPage() {
           {/* Account Type */}
           <div className="form-group">
             <label className="form-label">Account Type</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, role: 'CUSTOMER' }))}

@@ -289,17 +289,7 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-focus)',
-              borderRadius: 'var(--radius-card)',
-              maxWidth: '700px',
-              width: '100%',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'row',
-              boxShadow: 'var(--shadow-lg)'
-            }}
+            className="product-detail-modal-inner"
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ width: '45%', background: '#000' }}>

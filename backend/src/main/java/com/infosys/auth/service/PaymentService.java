@@ -174,7 +174,7 @@ public class PaymentService {
             order.setPaymentStatus("FAILED");
             order.setStatus(Order.OrderStatus.CANCELLED);
             orderRepository.save(order);
-            throw new RuntimeException("Razorpay payment signature verification failed");
+            throw new RuntimeException("Payment verification failed: The payment signature could not be verified. Please contact support with your Order ID: " + order.getId());
         }
 
         // Signature Verified Successfully! Update order status

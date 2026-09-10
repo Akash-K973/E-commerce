@@ -12,6 +12,11 @@ export default function VendorModule() {
   const [stats, setStats] = useState(null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [productFormError, setProductFormError] = useState('')
+  const [productSaveError, setProductSaveError] = useState('')
+  const [profileSaveError, setProfileSaveError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   // Notification state
   const [notifications, setNotifications] = useState([])
@@ -46,6 +51,7 @@ export default function VendorModule() {
 
   const loadVendorData = async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const [profData, statsData, prodData] = await Promise.all([
         VendorService.getVendorProfile(vendorId),
@@ -64,7 +70,8 @@ export default function VendorModule() {
         logoUrl: profData.logoUrl || ''
       })
     } catch (err) {
-      console.error('Error loading vendor portal data:', err)
+      const msg = err.response?.data?.message || err.message || 'Failed to load vendor portal data. Please try again.'
+      setLoadError(msg)
     } finally {
       setLoading(false)
     }
@@ -133,11 +140,30 @@ export default function VendorModule() {
 
   const handleProductSubmit = async (e) => {
     e.preventDefault()
+    setProductFormError('')
+    setProductSaveError('')
+
+    // Client-side validation
+    if (!productForm.name || productForm.name.trim() === '') {
+      setProductFormError('Product name is required.')
+      return
+    }
+    const priceNum = Number(productForm.price)
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setProductFormError('Price must be a positive number.')
+      return
+    }
+    const stockNum = Number(productForm.stockQuantity)
+    if (isNaN(stockNum) || stockNum < 0) {
+      setProductFormError('Stock quantity must be 0 or greater.')
+      return
+    }
+
     try {
       const payload = {
         ...productForm,
-        price: Number(productForm.price),
-        stockQuantity: Number(productForm.stockQuantity),
+        price: priceNum,
+        stockQuantity: stockNum,
         discount: Number(productForm.discount || 0),
         vendorId: vendorId,
         vendorName: profile?.storeName || user?.username || 'Vendor',
@@ -153,29 +179,33 @@ export default function VendorModule() {
       setShowProductModal(false)
       loadVendorData()
     } catch (err) {
-      console.error('Error saving product:', err)
-      alert('Failed to save product.')
+      const msg = err.response?.data?.message || err.message || 'Failed to save product. Please try again.'
+      setProductSaveError(msg)
     }
   }
 
   const handleDeleteProduct = async (prodId) => {
     if (!window.confirm('Are you sure you want to delete this product listing?')) return
+    setDeleteError('')
     try {
       await ProductService.deleteProduct(prodId)
       loadVendorData()
     } catch (err) {
-      console.error('Error deleting product:', err)
+      const msg = err.response?.data?.message || 'Failed to delete product. Please try again.'
+      setDeleteError(msg)
     }
   }
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
+    setProfileSaveError('')
     try {
       const updated = await VendorService.updateVendorProfile(vendorId, profileForm)
       setProfile(updated)
       setShowProfileModal(false)
     } catch (err) {
-      console.error('Error updating vendor profile:', err)
+      const msg = err.response?.data?.message || 'Failed to update vendor profile. Please try again.'
+      setProfileSaveError(msg)
     }
   }
 
@@ -198,6 +228,12 @@ export default function VendorModule() {
   }
 
   if (loading) return <div style={{ color: 'var(--gold)', padding: '2rem' }}>Loading Vendor Atelier Portal...</div>
+  if (loadError) return (
+    <div className="banner-error" style={{ margin: '2rem 0' }}>
+      ⚠️ {loadError}
+      <button onClick={loadVendorData} style={{ marginLeft: '1rem', background: 'none', border: '1px solid #F87171', color: '#F87171', padding: '0.3rem 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+    </div>
+  )
 
   return (
     <div style={{ padding: '1.5rem 0' }}>
@@ -452,7 +488,8 @@ export default function VendorModule() {
       </div>
 
       {/* Products Table */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+      {deleteError && <div className="banner-error">⚠️ {deleteError}</div>}
+      <div className="table-responsive" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
@@ -561,6 +598,9 @@ export default function VendorModule() {
             </h2>
 
             <form onSubmit={handleProductSubmit}>
+              {/* Form validation / save errors */}
+              {productFormError && <div className="banner-error" style={{ marginBottom: '1rem' }}>\u26a0\ufe0f {productFormError}</div>}
+              {productSaveError && <div className="banner-error" style={{ marginBottom: '1rem' }}>\u26a0\ufe0f {productSaveError}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Product Name</label>

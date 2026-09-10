@@ -317,6 +317,10 @@ export default function WarehouseStaffModule() {
   const [movements, setMovements] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [inwardError, setInwardError] = useState('')
+  const [inwardSuccess, setInwardSuccess] = useState('')
 
   const [showInwardModal, setShowInwardModal] = useState(false)
   const [productList, setProductList] = useState([])
@@ -325,6 +329,7 @@ export default function WarehouseStaffModule() {
 
   async function loadAll() {
     setLoading(true)
+    setLoadError('')
     try {
       const [ord, inv, mov, prods] = await Promise.all([
         WarehouseService.getActiveOrders(warehouseId).catch(e => { console.warn('Active orders load err:', e); return []; }),
@@ -337,7 +342,8 @@ export default function WarehouseStaffModule() {
       setMovements(mov || [])
       setProductList(prods || [])
     } catch (err) {
-      console.error('Failed to load warehouse data:', err)
+      const msg = err.response?.data?.message || err.message || 'Failed to load warehouse data.'
+      setLoadError(msg)
     } finally {
       setLoading(false)
     }
@@ -348,6 +354,8 @@ export default function WarehouseStaffModule() {
     if (!inwardForm.productId) { alert('Please select a product'); return }
     if (!warehouseId) { alert('No warehouse assigned to your staff account'); return }
     setInwardLoading(true)
+    setInwardError('')
+    setInwardSuccess('')
     try {
       await WarehouseService.inwardStock(warehouseId, {
         productId: Number(inwardForm.productId),
@@ -357,12 +365,15 @@ export default function WarehouseStaffModule() {
         aisleBin: inwardForm.aisleBin,
         note: inwardForm.note
       })
-      alert('Product stock successfully added to warehouse!')
-      setShowInwardModal(false)
+      setInwardSuccess('Product stock successfully added to warehouse!')
+      setTimeout(() => {
+        setShowInwardModal(false)
+        setInwardSuccess('')
+      }, 1500)
       setInwardForm({ productId: '', quantity: 50, aisleBin: 'Aisle A-01', note: 'Stock replenishment' })
       loadAll()
     } catch (err) {
-      alert('Failed to inward stock: ' + (err.response?.data?.message || err.message))
+      setInwardError('Failed to inward stock: ' + (err.response?.data?.message || err.message))
     } finally { setInwardLoading(false) }
   }
 
@@ -397,6 +408,13 @@ export default function WarehouseStaffModule() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--gold)', fontSize: '1.1rem' }}>
       ⏳ Loading warehouse data...
+    </div>
+  )
+
+  if (loadError) return (
+    <div className="banner-error" style={{ margin: '2rem 0' }}>
+      ⚠️ {loadError}
+      <button onClick={loadAll} style={{ marginLeft: '1rem', background: 'none', border: '1px solid #F87171', color: '#F87171', padding: '0.3rem 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
     </div>
   )
 
@@ -573,6 +591,8 @@ export default function WarehouseStaffModule() {
               borderRadius: 'var(--radius-card)', padding: '1.5rem', marginBottom: '1.5rem'
             }}>
               <h4 style={{ margin: '0 0 1rem', color: 'var(--gold)' }}>📥 Add Stock / Receive Product Shipment</h4>
+              {inwardError && <div className="banner-error" style={{ marginBottom: '1rem' }}>\u26a0\ufe0f {inwardError}</div>}
+              {inwardSuccess && <div className="banner-success" style={{ marginBottom: '1rem' }}>✅ {inwardSuccess}</div>}
               <form onSubmit={handleInwardStock} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Select Product</label>

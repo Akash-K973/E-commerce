@@ -104,63 +104,62 @@ export default function Profile() {
 
         {/* Profile Details List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Username</span>
-            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{profile?.username}</span>
+
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Username</span>
+            <span className="detail-value">{profile?.username}</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Email Address</span>
-            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{profile?.email}</span>
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Email Address</span>
+            <span className="detail-value">{profile?.email}</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Full Name</span>
-            <span style={{ fontWeight: '600', color: profile?.fullName ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Full Name</span>
+            <span className="detail-value" style={{ color: profile?.fullName ? 'var(--text-primary)' : 'var(--text-muted)' }}>
               {profile?.fullName || 'Not specified'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Phone Number</span>
-            <span style={{ fontWeight: '600', color: profile?.phoneNumber ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Phone Number</span>
+            <span className="detail-value" style={{ color: profile?.phoneNumber ? 'var(--text-primary)' : 'var(--text-muted)' }}>
               {profile?.phoneNumber || 'Not specified'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Location</span>
-            <span style={{ fontWeight: '600', color: profile?.location ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Location</span>
+            <span className="detail-value" style={{ color: profile?.location ? 'var(--text-primary)' : 'var(--text-muted)' }}>
               {profile?.location || 'Not specified'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Member Since</span>
-            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{formattedDate}</span>
+          <div className="profile-detail-row">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', flexShrink: 0 }}>Member Since</span>
+            <span className="detail-value">{formattedDate}</span>
           </div>
 
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button 
-            className="btn-primary" 
-            onClick={handleBackToDashboard} 
-            style={{ 
-              width: '200px',
-              marginTop: '0', 
-              background: 'rgba(255, 255, 255, 0.05)', 
-              border: '1px solid var(--glass-border)', 
-              color: 'var(--text-primary)' 
+        <div className="profile-actions">
+          <button
+            className="btn-primary"
+            onClick={handleBackToDashboard}
+            style={{
+              marginTop: '0',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid var(--glass-border)',
+              color: 'var(--text-primary)'
             }}
           >
             Dashboard
           </button>
-          
-          <button 
-            className="btn-primary" 
+
+          <button
+            className="btn-primary"
             onClick={handleEditProfile}
             style={{ marginTop: '0', flex: '1.5' }}
           >

@@ -840,35 +840,300 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
-   RESPONSIVE
+   TABLE RESPONSIVE UTILITY
+   ============================================================ */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-sm);
+}
+
+.table-responsive table {
+  min-width: 600px;
+}
+
+/* ============================================================
+   MODULE SECTION HEADER
+   ============================================================ */
+.module-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================================
+   ERROR / INFO BANNERS (Module level)
+   ============================================================ */
+.banner-error {
+  padding: 0.875rem 1.125rem;
+  border-radius: var(--radius-sm);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #F87171;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  animation: alertSlide 0.25s ease;
+  margin-bottom: 1.25rem;
+}
+
+.banner-warning {
+  padding: 0.875rem 1.125rem;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #FCD34D;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  animation: alertSlide 0.25s ease;
+  margin-bottom: 1.25rem;
+}
+
+.banner-success {
+  padding: 0.875rem 1.125rem;
+  border-radius: var(--radius-sm);
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  color: #4ADE80;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  animation: alertSlide 0.25s ease;
+  margin-bottom: 1.25rem;
+}
+
+/* ============================================================
+   MOBILE NAVBAR HAMBURGER
+   ============================================================ */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.nav-tabs-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.mobile-nav-drawer {
+  display: none;
+}
+
+/* ============================================================
+   PROFILE DETAIL ROW — prevent email overflow on mobile
+   ============================================================ */
+.profile-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.profile-detail-row .detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  max-width: 65%;
+}
+
+/* ============================================================
+   PROFILE BUTTONS — responsive flex wrap
+   ============================================================ */
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* ============================================================
+   PRODUCT DETAIL MODAL — responsive flex direction
+   ============================================================ */
+.product-detail-modal-inner {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-card);
+  max-width: 700px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET (≤ 900px)
+   ============================================================ */
+@media (max-width: 900px) {
+  .dashboard-content {
+    padding: var(--sp-4) var(--sp-3);
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 2rem;
+  }
+
+  /* Product modal stacks on tablet */
+  .product-detail-modal-inner {
+    flex-direction: column;
+    max-width: 480px;
+  }
+
+  .product-detail-modal-inner > div:first-child {
+    width: 100% !important;
+    height: 220px !important;
+  }
+
+  .product-detail-modal-inner > div:last-child {
+    width: 100% !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET (≤ 768px)
    ============================================================ */
 @media (max-width: 768px) {
+
+  /* --- AUTH --- */
   .auth-card {
     max-width: 100%;
     border-radius: 20px;
     padding: 2rem 1.5rem;
   }
 
+  /* --- NAVBAR --- */
   .dashboard-navbar {
     padding: 0 var(--sp-2);
     height: 60px;
+    flex-wrap: nowrap;
+    position: relative;
   }
 
+  /* Show hamburger, hide desktop tabs */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .nav-tabs-row {
+    display: none;
+  }
+
+  /* Mobile nav drawer */
+  .mobile-nav-drawer {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: rgba(20, 20, 20, 0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 200;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    animation: alertSlide 0.2s ease;
+  }
+
+  .mobile-nav-drawer button {
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+  }
+
+  /* Compact navbar right side on mobile */
+  .navbar-username {
+    display: none;
+  }
+
+  /* --- DASHBOARD CONTENT --- */
   .dashboard-content {
-    padding: var(--sp-4) var(--sp-2);
+    padding: var(--sp-3) var(--sp-2);
   }
 
   .dashboard-welcome h1 {
     font-size: 1.75rem;
   }
 
+  .dashboard-welcome p {
+    font-size: 0.875rem;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: var(--sp-2);
   }
+
+  /* --- PROFILE --- */
+  .profile-actions {
+    flex-direction: column;
+  }
+
+  .profile-actions button {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .profile-detail-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .profile-detail-row .detail-value {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  /* --- PROFILE EDIT: 2-col grids → 1-col --- */
+  .profile-edit-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- REGISTER: role button 2-col grid → 1-col --- */
+  .register-role-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
+/* ============================================================
+   RESPONSIVE — MOBILE (≤ 480px)
+   ============================================================ */
 @media (max-width: 480px) {
+  /* --- AUTH --- */
   .auth-bg {
     padding: var(--sp-2) var(--sp-1);
     align-items: flex-start;
@@ -884,12 +1149,17 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 1.5rem;
   }
 
+  /* --- DASHBOARD --- */
   .dashboard-welcome h1 {
     font-size: 1.5rem;
   }
 
   .dashboard-navbar {
     height: 56px;
+  }
+
+  .mobile-nav-drawer {
+    top: 56px;
   }
 
   .navbar-brand {
@@ -900,4 +1170,67 @@ h1, h2, h3, h4, h5, h6 {
     padding: var(--sp-2);
     border-radius: 20px;
   }
+
+  /* --- CART DRAWER full width on phone --- */
+  .cart-drawer {
+    max-width: 100% !important;
+  }
+
+  /* --- CHECKOUT MODAL --- */
+  .checkout-modal-inner {
+    padding: 1.25rem !important;
+    margin: 0.5rem;
+  }
+
+  /* --- MODULE SECTION HEADER stacks --- */
+  .module-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* --- VENDOR/WAREHOUSE stats grid: 2 cols on phones --- */
+  .stats-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+@keyframes alertSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }

@@ -1,17 +1,23 @@
-import { useState, useEffect } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthService from '../services/AuthService'
-import CustomerService from '../services/CustomerService'
 
 export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActiveTab }) {
   const navigate = useNavigate()
   const user = AuthService.getCurrentUser()
   const role = user?.role || 'CUSTOMER'
   const username = user?.username || 'Guest'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     AuthService.logout()
     navigate('/login')
+  }
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab)
+    navigate('/dashboard')
+    setMobileMenuOpen(false)
   }
 
   const getRoleBadgeClass = () => {
@@ -22,6 +28,14 @@ export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActive
     }
   }
 
+  const navTabs = [
+    { id: 'store', label: '🛍️ Storefront', show: true },
+    { id: 'customer', label: '📦 My Orders', show: role === 'CUSTOMER' || role === 'USER' || role === 'ADMIN' },
+    { id: 'vendor', label: '🏪 Vendor Portal', show: role === 'VENDOR' || role === 'ADMIN' },
+    { id: 'warehouse', label: '🏭 Warehouse', show: role === 'WAREHOUSE_STAFF' || role === 'ADMIN', idAttr: 'nav-warehouse' },
+    { id: 'admin', label: '⚡ Admin Portal', show: role === 'ADMIN' },
+  ].filter(t => t.show)
+
   return (
     <nav className="dashboard-navbar" style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border)' }}>
       <div className="navbar-brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
@@ -30,61 +44,20 @@ export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActive
         </span>
       </div>
 
-      {/* Nav Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <button
-          className={`btn-nav ${activeTab === 'store' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('store'); navigate('/dashboard'); }}
-          style={activeTab === 'store' ? activeNavStyle : navStyle}
-        >
-          🛍️ Storefront
-        </button>
-
-        {(role === 'CUSTOMER' || role === 'USER' || role === 'ADMIN') && (
+      <div className="nav-tabs-row">
+        {navTabs.map(tab => (
           <button
-            className={`btn-nav ${activeTab === 'customer' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('customer'); navigate('/dashboard'); }}
-            style={activeTab === 'customer' ? activeNavStyle : navStyle}
+            key={tab.id}
+            id={tab.idAttr}
+            onClick={() => handleTabClick(tab.id)}
+            style={activeTab === tab.id ? activeNavStyle : navStyle}
           >
-            📦 My Orders
+            {tab.label}
           </button>
-        )}
-
-        {(role === 'VENDOR' || role === 'ADMIN') && (
-          <button
-            className={`btn-nav ${activeTab === 'vendor' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('vendor'); navigate('/dashboard'); }}
-            style={activeTab === 'vendor' ? activeNavStyle : navStyle}
-          >
-            🏪 Vendor Portal
-          </button>
-        )}
-
-        {(role === 'WAREHOUSE_STAFF' || role === 'ADMIN') && (
-          <button
-            id="nav-warehouse"
-            className={`btn-nav ${activeTab === 'warehouse' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('warehouse'); navigate('/dashboard'); }}
-            style={activeTab === 'warehouse' ? activeNavStyle : navStyle}
-          >
-            🏭 Warehouse
-          </button>
-        )}
-
-        {role === 'ADMIN' && (
-          <button
-            className={`btn-nav ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('admin'); navigate('/dashboard'); }}
-            style={activeTab === 'admin' ? activeNavStyle : navStyle}
-          >
-            ⚡ Admin Portal
-          </button>
-        )}
+        ))}
       </div>
 
-      {/* Right Navbar Controls */}
-      <div className="navbar-right" style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-        {/* Cart Button */}
+      <div className="navbar-right" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <button
           onClick={onOpenCart}
           style={{
@@ -99,40 +72,59 @@ export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActive
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            transition: 'var(--transition)'
+            transition: 'var(--transition)',
+            flexShrink: 0,
           }}
         >
           🛒 Cart
           {cartCount > 0 && (
-            <span
-              style={{
-                background: 'var(--gold)',
-                color: '#000',
-                borderRadius: '50%',
-                padding: '2px 8px',
-                fontSize: '0.75rem',
-                fontWeight: '800'
-              }}
-            >
+            <span style={{ background: 'var(--gold)', color: '#000', borderRadius: '50%', padding: '2px 7px', fontSize: '0.75rem', fontWeight: '800' }}>
               {cartCount}
             </span>
           )}
         </button>
 
-        {/* Profile Link */}
         <div
           onClick={() => navigate('/profile')}
+          className="navbar-username"
           style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
         >
           <span className={getRoleBadgeClass()}>{role}</span>
           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{username}</span>
         </div>
 
-        {/* Logout */}
         <button className="btn-logout" onClick={handleLogout}>
           Logout
         </button>
+
+        <button
+          className="hamburger-btn"
+          onClick={() => setMobileMenuOpen(v => !v)}
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="mobile-nav-drawer">
+          {navTabs.map(tab => (
+            <button
+              key={tab.id}
+              id={tab.idAttr}
+              onClick={() => handleTabClick(tab.id)}
+              style={activeTab === tab.id ? activeNavStyle : navStyle}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span className={getRoleBadgeClass()}>{role}</span>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.875rem' }}>{username}</span>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }

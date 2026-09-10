@@ -30,15 +30,25 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
   const [couponError, setCouponError] = useState('')
   const [applyingCoupon, setApplyingCoupon] = useState(false)
 
+  // Error states
+  const [cartError, setCartError] = useState('')
+  const [orderError, setOrderError] = useState('')
+  const [cartOpError, setCartOpError] = useState('')
+  const [shippingError, setShippingError] = useState('')
+
   const fetchCart = async () => {
     if (!user?.id) return
     setLoadingCart(true)
+    setCartError('')
     try {
       const data = await CustomerService.getCart(user.id)
       setCartItems(data)
       if (onCartUpdated) onCartUpdated(data.length)
     } catch (err) {
-      console.error('Error loading cart:', err)
+      const msg = err.response?.status === 401
+        ? 'Session expired. Please log in again.'
+        : err.response?.data?.message || 'Failed to load cart. Please try again.'
+      setCartError(msg)
     } finally {
       setLoadingCart(false)
     }
@@ -47,11 +57,15 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
   const fetchOrders = async () => {
     if (!user?.id) return
     setLoadingOrders(true)
+    setOrderError('')
     try {
       const data = await CustomerService.getCustomerOrders(user.id)
       setOrders(data)
     } catch (err) {
-      console.error('Error loading orders:', err)
+      const msg = err.response?.status === 401
+        ? 'Session expired. Please log in again.'
+        : err.response?.data?.message || 'Failed to load order history. Please try again.'
+      setOrderError(msg)
     } finally {
       setLoadingOrders(false)
     }
@@ -67,20 +81,24 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
   }, [user?.id])
 
   const handleUpdateQuantity = async (cartItemId, newQty) => {
+    setCartOpError('')
     try {
       await CustomerService.updateCartQuantity(cartItemId, newQty)
       fetchCart()
     } catch (err) {
-      console.error('Error updating quantity:', err)
+      const msg = err.response?.data?.message || 'Failed to update quantity. Please try again.'
+      setCartOpError(msg)
     }
   }
 
   const handleRemoveItem = async (cartItemId) => {
+    setCartOpError('')
     try {
       await CustomerService.removeFromCart(cartItemId)
       fetchCart()
     } catch (err) {
-      console.error('Error removing cart item:', err)
+      const msg = err.response?.data?.message || 'Failed to remove item. Please try again.'
+      setCartOpError(msg)
     }
   }
 
@@ -153,9 +171,14 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
     e.preventDefault()
     if (!user?.id) return
     if (cartItems.length === 0) {
-      alert('Cart is empty. Please add items before checkout.')
+      setPaymentResultModal({ isOpen: true, status: 'FAILED', order: null, errorMessage: 'Your cart is empty. Please add items before proceeding to checkout.' })
       return
     }
+    if (!shippingAddress.trim()) {
+      setShippingError('Shipping address is required.')
+      return
+    }
+    setShippingError('')
 
     setPlacingOrder(true)
     try {
@@ -267,6 +290,7 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
           onClick={onCloseCart}
         >
           <div
+            className="cart-drawer"
             style={{
               width: '100%',
               maxWidth: '450px',
@@ -291,6 +315,10 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
                 ✕
               </button>
             </div>
+
+            {/* Cart error banner */}
+            {cartError && <div className="banner-error">⚠️ {cartError}</div>}
+            {cartOpError && <div className="banner-error" style={{ marginBottom: '0.75rem' }}>⚠️ {cartOpError}</div>}
 
             {/* Cart Items List */}
             <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
@@ -446,15 +474,16 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                  Shipping Address
+                  Shipping Address *
                 </label>
                 <textarea
                   rows={3}
                   value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
+                  onChange={(e) => { setShippingAddress(e.target.value); setShippingError('') }}
                   style={{ ...inputStyle, resize: 'vertical' }}
                   required
                 />
+                {shippingError && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', fontWeight: '500' }}>⚠️ {shippingError}</div>}
               </div>
 
               <div style={{ marginBottom: '1.25rem' }}>
@@ -692,9 +721,12 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
             Customer Dashboard & Order History
           </h2>
 
+          {/* Order error banner */}
+          {orderError && <div className="banner-error">⚠️ {orderError}</div>}
+
           {loadingOrders ? (
             <div style={{ color: 'var(--gold)' }}>Loading order history...</div>
-          ) : orders.length === 0 ? (
+          ) : orders.length === 0 && !orderError ? (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '2.5rem', borderRadius: 'var(--radius-card)', textAlign: 'center', color: 'var(--text-secondary)' }}>
               No order history found yet. Explore the Storefront catalog to place your first luxury order!
             </div>

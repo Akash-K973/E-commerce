@@ -45,13 +45,13 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         // Check for duplicate email
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Error: Email is already in use!");
+        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+            throw new RuntimeException("This email address is already registered. Please use a different email or sign in.");
         }
 
         // Check for duplicate username
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Error: Username is already taken!");
+        if (userRepository.existsByUsername(request.getUsername().trim())) {
+            throw new RuntimeException("This username is already taken. Please choose a different username.");
         }
 
         User.Role targetRole = User.Role.CUSTOMER;
