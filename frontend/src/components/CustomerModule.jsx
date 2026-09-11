@@ -3,6 +3,7 @@ import CustomerService from '../services/CustomerService'
 import AuthService from '../services/AuthService'
 import PaymentService from '../services/PaymentService'
 import CouponService from '../services/CouponService'
+import { RAZORPAY_KEY_ID, APP_NAME } from '../config/env'
 
 export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated, showOrderHistory = true }) {
   const user = AuthService.getCurrentUser()
@@ -193,7 +194,7 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
       const { razorpayOrderId, razorpayKeyId, orderId, amount, currency } = orderResp || {}
 
       // 2. Trigger Razorpay SDK modal if window.Razorpay exists and key is valid
-      const effectiveKey = razorpayKeyId || razorpayKeyInfo.keyId || 'rzp_test_5Xv8eZ4Q9X0123'
+      const effectiveKey = razorpayKeyId || razorpayKeyInfo.keyId || RAZORPAY_KEY_ID
       const isDummyKey = effectiveKey.startsWith('rzp_test_5Xv8eZ4Q') || (razorpayOrderId && razorpayOrderId.startsWith('order_rzp_test_'))
 
       if (window.Razorpay && !isDummyKey) {
@@ -201,7 +202,7 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
           key: effectiveKey,
           amount: Math.round(Number(amount) * 100),
           currency: currency || 'INR',
-          name: 'InfoSys Luxury Store',
+          name: APP_NAME,
           description: `Order #${orderId} - Razorpay Test Mode Checkout`,
           image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80',
           order_id: razorpayOrderId,
@@ -437,11 +438,13 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
           onClick={() => setIsCheckout(false)}
         >
           <div
+            className="checkout-modal-inner"
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-focus)',
               borderRadius: 'var(--radius-card)',
-              maxWidth: '500px', width: '100%', padding: '2rem'
+              maxWidth: '500px', width: '95%', padding: '2rem',
+              maxHeight: '90vh', overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -599,10 +602,11 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
               background: 'var(--bg-secondary)',
               border: paymentResultModal.status === 'SUCCESS' ? '1px solid var(--gold)' : '1px solid #ef4444',
               borderRadius: '24px',
-              maxWidth: '460px', width: '100%', padding: '2.5rem 2rem',
+              maxWidth: '460px', width: '95%', padding: '2.5rem 1.5rem',
               textAlign: 'center',
               boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-              position: 'relative'
+              position: 'relative',
+              maxHeight: '90vh', overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -742,22 +746,22 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
                     padding: '1.5rem'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                    <div>
+                  <div className="order-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                       <span style={{ fontWeight: '800', color: 'var(--gold)', fontSize: '1.1rem' }}>
                         Order #{order.id}
                       </span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: '1rem' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                         {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Recent'}
                       </span>
                       {order.razorpayPaymentId && (
-                        <span style={{ marginLeft: '1rem', background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', color: '#93c5fd', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem' }}>
+                        <span style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', color: '#93c5fd', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem' }}>
                           Razorpay: {order.razorpayPaymentId}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className="badge badge-green">{order.paymentStatus || 'SUCCESS'}</span>
                       <span className="badge badge-green">{order.status || 'PROCESSING'}</span>
                     </div>
@@ -765,7 +769,7 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                     {order.items?.map((item) => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <img src={item.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=60&q=80'} alt="" style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover' }} />
                           <span>{item.productName} (x{item.quantity})</span>
@@ -777,7 +781,7 @@ export default function CustomerModule({ isCartOpen, onCloseCart, onCartUpdated,
                     ))}
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.9rem' }}>
+                  <div className="order-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.9rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <div style={{ color: 'var(--text-secondary)' }}>
                       Shipping: <strong style={{ color: '#fff' }}>{order.shippingAddress}</strong>
                     </div>

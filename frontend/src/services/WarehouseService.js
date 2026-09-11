@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../config/env'
 
-const BASE = 'http://localhost:8080/api/warehouse'
+const BASE = `${API_BASE_URL}/warehouse`
 
 const getHeaders = () => {
   const user = JSON.parse(localStorage.getItem('user') || 'null')

@@ -1,4 +1,4 @@
-﻿package com.infosys.auth.controller;
+package com.infosys.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -72,5 +72,6 @@ com\infosys\auth\repository\VendorCommissionRepository.class
 com\infosys\auth\config\DataInitializer.class
 com\infosys\auth\AuthBackendApplication.class
 com\infosys\auth\repository\OrderRepository.class
+com\infosys\auth\controller\GlobalExceptionHandler.class
 com\infosys\auth\model\ReturnRequest.class
 com\infosys\auth\dto\LoginRequest.class

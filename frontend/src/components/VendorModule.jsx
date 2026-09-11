@@ -489,8 +489,9 @@ export default function VendorModule() {
 
       {/* Products Table */}
       {deleteError && <div className="banner-error">⚠️ {deleteError}</div>}
-      <div className="table-responsive" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+        <div className="table-responsive">
+          <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
               <th style={{ padding: '1rem' }}>Product</th>
@@ -572,6 +573,7 @@ export default function VendorModule() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Add / Edit Product Modal */}
@@ -585,11 +587,13 @@ export default function VendorModule() {
           onClick={() => setShowProductModal(false)}
         >
           <div
+            className="vendor-modal-inner"
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-focus)',
               borderRadius: 'var(--radius-card)',
-              maxWidth: '600px', width: '100%', padding: '2rem'
+              maxWidth: '600px', width: '95%', padding: '2rem',
+              maxHeight: '90vh', overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -601,7 +605,7 @@ export default function VendorModule() {
               {/* Form validation / save errors */}
               {productFormError && <div className="banner-error" style={{ marginBottom: '1rem' }}>\u26a0\ufe0f {productFormError}</div>}
               {productSaveError && <div className="banner-error" style={{ marginBottom: '1rem' }}>\u26a0\ufe0f {productSaveError}</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Product Name</label>
                   <input
@@ -627,7 +631,7 @@ export default function VendorModule() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Price ($)</label>
                   <input
@@ -723,11 +727,13 @@ export default function VendorModule() {
           onClick={() => setShowProfileModal(false)}
         >
           <div
+            className="vendor-modal-inner"
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-focus)',
               borderRadius: 'var(--radius-card)',
-              maxWidth: '550px', width: '100%', padding: '2rem'
+              maxWidth: '550px', width: '95%', padding: '2rem',
+              maxHeight: '90vh', overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -816,3 +822,4 @@ const inputStyle = {
   color: '#fff',
   outline: 'none'
 }
+

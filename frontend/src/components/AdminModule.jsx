@@ -826,7 +826,8 @@ export default function AdminModule() {
             <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700' }}>Registered Accounts &amp; Access Control</h3>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Accounts: {users.length}</span>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="table-responsive">
+            <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                 <th style={{ padding: '1rem' }}>User Profile</th>
@@ -879,6 +880,7 @@ export default function AdminModule() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -889,7 +891,7 @@ export default function AdminModule() {
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700' }}>Vendor Verification &amp; Governance</h3>
             
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {['ALL', 'APPROVED', 'PENDING', 'REJECTED', 'SUSPENDED'].map((st) => (
                 <button
                   key={st}
@@ -899,9 +901,9 @@ export default function AdminModule() {
                     color: vendorFilterStatus === st ? '#000' : 'var(--text-secondary)',
                     border: '1px solid var(--border)',
                     padding: '0.35rem 0.75rem',
-                    borderRadius: '8px',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: vendorFilterStatus === st ? '700' : '500',
                     cursor: 'pointer'
                   }}
                 >
@@ -911,7 +913,8 @@ export default function AdminModule() {
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="table-responsive">
+            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                 <th style={{ padding: '1rem' }}>Store Name &amp; Address</th>
@@ -974,6 +977,7 @@ export default function AdminModule() {
               )}
             </tbody>
           </table>
+          </div>
 
           {/* Vendor Details Drawer Modal */}
           {selectedVendorDetails && (
@@ -1141,7 +1145,8 @@ export default function AdminModule() {
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="table-responsive">
+            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                 <th style={{ padding: '1rem' }}>Order ID</th>
@@ -1202,6 +1207,7 @@ export default function AdminModule() {
               )}
             </tbody>
           </table>
+          </div>
 
           {/* Order Details Modal */}
           {selectedOrder && (
@@ -1397,7 +1403,8 @@ export default function AdminModule() {
             <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700' }}>Vendor Sales, Commission &amp; Disbursal Ledger</h3>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="table-responsive">
+            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                   <th style={{ padding: '1rem' }}>Vendor Store</th>
@@ -1450,6 +1457,7 @@ export default function AdminModule() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Transactional Order Commission Records Table */}
@@ -1458,7 +1466,8 @@ export default function AdminModule() {
               <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
                 <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700' }}>📜 Order Commission Transactions (PostgreSQL Records)</h3>
               </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <div className="table-responsive">
+              <table style={{ width: '100%', minWidth: '950px', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase' }}>
                     <th style={{ padding: '1rem' }}>Record ID</th>
@@ -1517,6 +1526,7 @@ export default function AdminModule() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -1846,117 +1856,104 @@ export default function AdminModule() {
 
           {/* Coupon Campaigns Table */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden', marginBottom: '2.5rem' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '1rem' }}>Coupon Code</th>
-                  <th style={{ padding: '1rem' }}>Discount</th>
-                  <th style={{ padding: '1rem' }}>Rules &amp; Limits</th>
-                  <th style={{ padding: '1rem' }}>Redemptions</th>
-                  <th style={{ padding: '1rem' }}>Validity</th>
-                  <th style={{ padding: '1rem' }}>Status</th>
-                  <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {coupons.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                      No coupons created yet. Click "Create New Coupon" to start a campaign.
-                    </td>
+            <div className="table-responsive">
+              <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '1rem' }}>Coupon Code</th>
+                    <th style={{ padding: '1rem' }}>Discount</th>
+                    <th style={{ padding: '1rem' }}>Rules &amp; Limits</th>
+                    <th style={{ padding: '1rem' }}>Redemptions</th>
+                    <th style={{ padding: '1rem' }}>Validity</th>
+                    <th style={{ padding: '1rem' }}>Status</th>
+                    <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
                   </tr>
-                ) : (
-                  coupons.map((cpn) => {
-                    const isExpired = cpn.expiryDate && new Date(cpn.expiryDate) < new Date()
-                    const isLimitReached = cpn.usageLimit && cpn.usedCount >= cpn.usageLimit
-                    return (
-                      <tr key={cpn.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(212, 175, 55, 0.12)', border: '1px solid var(--gold)', padding: '0.3rem 0.75rem', borderRadius: '8px' }}>
-                            <span style={{ fontWeight: '800', color: 'var(--gold)', letterSpacing: '0.05em' }}>{cpn.code}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          <span style={{ fontWeight: '700', color: '#fff', fontSize: '1rem' }}>
-                            {cpn.discountType === 'PERCENTAGE' ? `${cpn.discountValue}% OFF` : `₹${Number(cpn.discountValue).toLocaleString()} OFF`}
-                          </span>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {cpn.discountType === 'PERCENTAGE' ? 'Percentage Discount' : 'Flat Amount Discount'}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                          <div>Min Order: {cpn.minOrderAmount ? `₹${Number(cpn.minOrderAmount).toLocaleString()}` : 'None'}</div>
-                          {cpn.maxDiscountAmount && (
-                            <div style={{ color: 'var(--text-muted)' }}>Max Cap: ₹{Number(cpn.maxDiscountAmount).toLocaleString()}</div>
-                          )}
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ fontWeight: '700', color: isLimitReached ? '#ef4444' : '#fff' }}>
-                            {cpn.usedCount || 0} / {cpn.usageLimit ? cpn.usageLimit : '∞'}
-                          </div>
-                          {cpn.usageLimit && (
-                            <div style={{ width: '100px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', marginTop: '0.3rem', overflow: 'hidden' }}>
-                              <div style={{ width: `${Math.min(100, ((cpn.usedCount || 0) / cpn.usageLimit) * 100)}%`, height: '100%', background: isLimitReached ? '#ef4444' : 'var(--gold)' }} />
+                </thead>
+                <tbody>
+                  {coupons.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        No coupons created yet. Click "Create New Coupon" to start a campaign.
+                      </td>
+                    </tr>
+                  ) : (
+                    coupons.map((cpn) => {
+                      const status = getCouponStatus(cpn)
+                      return (
+                        <tr key={cpn.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: !cpn.active ? 'rgba(0,0,0,0.2)' : 'transparent' }}>
+                          <td style={{ padding: '1rem' }}>
+                            <span style={{ fontWeight: '800', color: 'var(--gold)', letterSpacing: '0.05em', background: 'rgba(212,175,55,0.1)', padding: '0.25rem 0.6rem', borderRadius: '6px', border: '1px solid var(--border-focus)' }}>
+                              {cpn.code}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>
+                            {cpn.discountType === 'PERCENTAGE' ? `${cpn.discountValue}% OFF` : `₹${cpn.discountValue} FLAT`}
+                            {cpn.maxDiscountAmount && (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
+                                Max cap: ₹{cpn.maxDiscountAmount}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                            {cpn.minOrderAmount ? `Min order: ₹${cpn.minOrderAmount}` : 'No min order'}
+                            {cpn.usageLimit && (
+                              <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                                Limit: {cpn.usageLimit} uses
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--gold)' }}>{cpn.usedCount || 0}</span>
+                            {cpn.usageLimit && <span style={{ color: 'var(--text-muted)' }}> / {cpn.usageLimit}</span>}
+                          </td>
+                          <td style={{ padding: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            {cpn.expiryDate ? new Date(cpn.expiryDate).toLocaleDateString() : 'Never expires'}
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            <span className={`badge ${status.color}`}>
+                              {status.label}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => handleToggleCoupon(cpn.id)}
+                                style={{
+                                  background: cpn.active ? 'rgba(245,158,11,0.15)' : 'rgba(34,197,94,0.15)',
+                                  border: cpn.active ? '1px solid var(--warning)' : '1px solid var(--success)',
+                                  color: cpn.active ? '#fde047' : '#86efac',
+                                  padding: '0.35rem 0.75rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                {cpn.active ? 'Disable' : 'Enable'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCoupon(cpn.id)}
+                                style={{
+                                  background: 'rgba(220,38,38,0.15)',
+                                  border: '1px solid var(--error)',
+                                  color: '#fca5a5',
+                                  padding: '0.35rem 0.75rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                Delete
+                              </button>
                             </div>
-                          )}
-                        </td>
-                        <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          <div>From: {cpn.startDate ? new Date(cpn.startDate).toLocaleDateString() : 'Immediate'}</div>
-                          <div style={{ color: isExpired ? '#ef4444' : 'var(--text-secondary)' }}>
-                            To: {cpn.expiryDate ? new Date(cpn.expiryDate).toLocaleDateString() : 'Never'}
-                            {isExpired && <span style={{ marginLeft: '0.3rem', color: '#ef4444', fontWeight: '700' }}>(Expired)</span>}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          {cpn.active && !isExpired && !isLimitReached ? (
-                            <span className="badge badge-green">Active</span>
-                          ) : isExpired ? (
-                            <span className="badge badge-red">Expired</span>
-                          ) : isLimitReached ? (
-                            <span className="badge badge-yellow">Exhausted</span>
-                          ) : (
-                            <span className="badge badge-red">Inactive</span>
-                          )}
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                            <button
-                              onClick={() => handleToggleCoupon(cpn.id)}
-                              style={{
-                                background: cpn.active ? 'rgba(245,158,11,0.15)' : 'rgba(34,197,94,0.15)',
-                                border: cpn.active ? '1px solid var(--warning)' : '1px solid var(--success)',
-                                color: cpn.active ? '#fde047' : '#86efac',
-                                padding: '0.35rem 0.75rem',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '0.8rem'
-                              }}
-                            >
-                              {cpn.active ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCoupon(cpn.id)}
-                              style={{
-                                background: 'rgba(220,38,38,0.15)',
-                                border: '1px solid var(--error)',
-                                color: '#fca5a5',
-                                padding: '0.35rem 0.75rem',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem'
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Coupon Usage Audit Ledger */}
@@ -1965,7 +1962,8 @@ export default function AdminModule() {
               📜 Coupon Redemption Ledger &amp; Audit Trail
             </h3>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+              <div className="table-responsive">
+              <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)' }}>
                     <th style={{ padding: '0.9rem 1rem' }}>Redemption ID</th>
@@ -2011,6 +2009,7 @@ export default function AdminModule() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         </div>
@@ -2079,7 +2078,7 @@ export default function AdminModule() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '600' }}>
                     Discount Type *
@@ -2111,7 +2110,7 @@ export default function AdminModule() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                     Min Order Amount (₹)
@@ -2157,7 +2156,7 @@ export default function AdminModule() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                     Start Date
@@ -2307,7 +2306,8 @@ export default function AdminModule() {
               <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>🏢 Managed Warehouse Facilities</h4>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Click "View Inventory" to inspect stock allocation</span>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <div className="table-responsive">
+            <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                   <th style={{ padding: '0.75rem 1.25rem' }}>Code</th>
@@ -2347,6 +2347,7 @@ export default function AdminModule() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Selected Facility Stock Inventory Breakdown */}
@@ -2440,7 +2441,8 @@ export default function AdminModule() {
                   <button onClick={() => setShowAdminInwardModal(true)} style={{ padding: '0.5rem 1rem', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer' }}>+ Add First Product Stock</button>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <div className="table-responsive">
+                <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                       <th style={{ padding: '0.6rem 1rem' }}>Product</th>
@@ -2467,6 +2469,7 @@ export default function AdminModule() {
                     })}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           )}
@@ -2550,7 +2553,8 @@ const tabStyle = {
   cursor: 'pointer',
   fontWeight: '600',
   fontSize: '0.9rem',
-  whiteSpace: 'nowrap'
+  whiteSpace: 'nowrap',
+  flexShrink: 0
 }
 
 const activeTabStyle = {
@@ -2562,5 +2566,6 @@ const activeTabStyle = {
   cursor: 'pointer',
   fontWeight: '800',
   fontSize: '0.9rem',
-  whiteSpace: 'nowrap'
+  whiteSpace: 'nowrap',
+  flexShrink: 0
 }

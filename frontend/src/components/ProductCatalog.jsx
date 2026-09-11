@@ -108,7 +108,7 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
         </div>
 
         {/* Search Input */}
-        <div style={{ position: 'relative', width: '300px' }}>
+        <div className="catalog-search-container" style={{ position: 'relative', width: '300px', maxWidth: '100%' }}>
           <input
             type="text"
             placeholder="Search catalog..."
@@ -136,7 +136,7 @@ export default function ProductCatalog({ onAddToCartSuccess }) {
 
       {/* Product Grid */}
       {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.75rem' }}>
+        <div className="product-grid-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
           {products.map((product) => (
             <div
               key={product.id}

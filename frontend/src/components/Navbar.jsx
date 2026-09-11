@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 
@@ -119,9 +119,26 @@ export default function Navbar({ cartCount = 0, onOpenCart, activeTab, setActive
               {tab.label}
             </button>
           ))}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span className={getRoleBadgeClass()}>{role}</span>
-            <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.875rem' }}>{username}</span>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }} onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}>
+              <span className={getRoleBadgeClass()}>{role}</span>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.875rem' }}>{username}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'rgba(220,38,38,0.15)',
+                border: '1px solid var(--error)',
+                color: '#fca5a5',
+                padding: '0.4rem 0.8rem',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.85rem'
+              }}
+            >
+              Logout ⎋
+            </button>
           </div>
         </div>
       )}

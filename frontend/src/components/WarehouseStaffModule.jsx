@@ -655,8 +655,8 @@ export default function WarehouseStaffModule() {
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No inventory data available in this warehouse yet. Use "+ Inward Stock" above to add products.</div>
           ) : (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: '750px', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-secondary)' }}>
                       {['Product', 'SKU', 'Available', 'Reserved', 'Effective', 'Bin Location', 'Status'].map(h => (
@@ -717,8 +717,8 @@ export default function WarehouseStaffModule() {
                   🔄 Stock Movement Ledger
                 </h3>
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: '750px', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-secondary)' }}>
                       {['Type', 'Product', 'Qty Change', 'Order', 'By', 'Note', 'Time'].map(h => (
