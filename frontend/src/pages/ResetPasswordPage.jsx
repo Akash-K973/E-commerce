@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AuthService from '../services/AuthService'
+import { getErrorMessage } from '../utils/errorHandler'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -66,7 +67,7 @@ export default function ResetPasswordPage() {
       await AuthService.resetPassword(formData.token.trim(), formData.newPassword)
       setSuccess(true)
     } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to reset password. Please try again.'
+      const msg = getErrorMessage(error, 'Failed to reset password. Please try again.')
       setApiError(msg)
     } finally {
       setLoading(false)

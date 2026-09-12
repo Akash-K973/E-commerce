@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
+import { getErrorMessage } from '../utils/errorHandler'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -31,7 +32,7 @@ export default function ForgotPasswordPage() {
       setResetToken(data.resetToken || '')
       setSubmitted(true)
     } catch (error) {
-      const msg = error.response?.data?.message || 'Something went wrong. Please try again.'
+      const msg = getErrorMessage(error, 'Something went wrong. Please try again.')
       setApiError(msg)
     } finally {
       setLoading(false)

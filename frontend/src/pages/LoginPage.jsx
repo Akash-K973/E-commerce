@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthService from '../services/AuthService'
+import { getErrorMessage } from '../utils/errorHandler'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export default function LoginPage() {
         navigate('/dashboard')
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Invalid email or password. Please try again.'
+      const msg = getErrorMessage(error, 'Invalid email or password. Please try again.')
       setApiError(msg)
     } finally {
       setLoading(false)
