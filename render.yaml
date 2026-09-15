@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: obsidian-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    region: oregon
+    healthCheckPath: /api/auth/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: obsidian-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://*.vercel.app,http://localhost:5173"
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_CURRENCY
+        value: "INR"
+      - key: SHOPSTACK_COMMISSION_RATE
+        value: "10.0"
+
+databases:
+  - name: obsidian-db
+    plan: free
+    databaseName: authdb
+    user: postgres
+    region: oregon
